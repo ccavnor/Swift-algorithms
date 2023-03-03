@@ -59,7 +59,6 @@ public protocol TreeNodeProtocol: Comparable & Equatable {
     var left: NodeType? { get set }
     var right: NodeType? { get set }
     var parent: NodeType? { get set }
-    //var height: Int { get set } // distance from node to lowest level of tree
 
     // MARK: - Tree information
     var isRoot: Bool { get }

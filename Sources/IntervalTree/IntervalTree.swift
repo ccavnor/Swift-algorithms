@@ -13,7 +13,8 @@ import AVLTree
 // TODO: override BST search to use maxEnd instead of equality checks?
 
 // MARK: - Interval
-final class Interval<T: Comparable & Numeric>: Comparable & Equatable {
+/// The value slot (T) for the IntervalTree
+public final class Interval<T: Comparable & Numeric>: Comparable & Equatable {
     let start: T
     let end: T
     
@@ -41,78 +42,79 @@ final class Interval<T: Comparable & Numeric>: Comparable & Equatable {
         return f
     }
     
-    // length of the interval - returns float to unsure accuracy of decimal intervals
+    /// Length of the interval - returns float to unsure accuracy of decimal intervals
     public func length() -> Float {
         return f(end - start)
     }
     
     /// == (equality)
     /// check that two intervals begin and end at same values
-    static func == (lhs: Interval<T>, rhs: Interval<T>) -> Bool {
+    public static func == (lhs: Interval<T>, rhs: Interval<T>) -> Bool {
         return (lhs.start == rhs.start) && (lhs.end == rhs.end)
     }
     
     /// != (non-equality)
     /// check that two intervals do not overlap
-    static func != (lhs: Interval<T>, rhs: Interval<T>) -> Bool {
+    public static func != (lhs: Interval<T>, rhs: Interval<T>) -> Bool {
         return !(lhs == rhs)
     }
     
     /// > (gt)
     /// reference interval must be to the right of test interval end
-    static func > (lhs: Interval, rhs: Interval) -> Bool {
+    public static func > (lhs: Interval, rhs: Interval) -> Bool {
         (lhs.start > rhs.end)
     }
     
     /// >=  (gte)
     /// reference interval must begin at or to the right of test interval end
-    static func >= (lhs: Interval, rhs: Interval) -> Bool {
+    public static func >= (lhs: Interval, rhs: Interval) -> Bool {
         if lhs == rhs { return true }
         return (lhs.start >= rhs.end)
     }
     
     /// < (lt)
     /// test interval must be to the right of reference interval end
-    static func < (lhs: Interval, rhs: Interval) -> Bool {
+    public static func < (lhs: Interval, rhs: Interval) -> Bool {
         return (rhs > lhs)
     }
     
     /// <= (lte)
     /// test interval must begin at or to the right of reference interval end
-    static func <= (lhs: Interval, rhs: Interval) -> Bool {
+    public static func <= (lhs: Interval, rhs: Interval) -> Bool {
         if lhs == rhs { return true }
         return (rhs >= lhs)
     }
 }
 
+// For Numeric conformance of the Interval type
 extension Interval: Numeric {
-    typealias IntegerLiteralType = Int
-    typealias Magnitude = T
-    var magnitude: T {
+    public typealias IntegerLiteralType = Int
+    public typealias Magnitude = T
+    public var magnitude: T {
         return (end - start)
     }
-
-    convenience init(integerLiteral value: Int) {
+    
+    public convenience init(integerLiteral value: Int) {
         self.init(exactly: 0)!
     }
-
-    convenience init?<T>(exactly source: T) where T : BinaryInteger {
+    
+    public convenience init?<T>(exactly source: T) where T : BinaryInteger {
         self.init(integerLiteral: 0)
     }
-
-    static func - (lhs: Interval<T>, rhs: Interval<T>) -> Self {
+    
+    public static func - (lhs: Interval<T>, rhs: Interval<T>) -> Self {
         return try! Self.init(start: (lhs.start - rhs.start), end: (lhs.end - rhs.end))
     }
-
-    static func * (lhs: Interval<T>, rhs: Interval<T>) -> Self {
+    
+    public static func * (lhs: Interval<T>, rhs: Interval<T>) -> Self {
         return try! Self.init(start: (lhs.start * rhs.start), end: (lhs.end * rhs.end))
     }
-
-    static func + (lhs: Interval<T>, rhs: Interval<T>) -> Self {
+    
+    public static func + (lhs: Interval<T>, rhs: Interval<T>) -> Self {
         return try! Self.init(start: (lhs.start + rhs.start), end: (lhs.end + rhs.end))
     }
-
-    static func *= (lhs: inout Interval<T>, rhs: Interval<T>) {
+    
+    public static func *= (lhs: inout Interval<T>, rhs: Interval<T>) {
         lhs = lhs * rhs
     }
 }
@@ -123,13 +125,13 @@ extension Interval: CustomDebugStringConvertible {
     var description: String {
         "[\(start), \(end)]"
     }
-    var debugDescription: String {
+    public var debugDescription: String {
         "[\(start), \(end)]"
     }
 }
 
 // MARK: - IntervalNode
-class IntervalNode<T: Comparable & Numeric>: BinarySearchTreeNode<Interval<T>> {
+public class IntervalNode<T: Comparable & Numeric>: BinarySearchTreeNode<Interval<T>> {
     fileprivate var maxEnd: T
     
     init(interval: Interval<T>) {
@@ -154,26 +156,28 @@ class IntervalNode<T: Comparable & Numeric>: BinarySearchTreeNode<Interval<T>> {
         return false
     }
 }
+
 // MARK: - IntervalNode Debugging
 extension IntervalNode: CustomDebugStringConvertible {
     var description: String {
         "[\(value.start), \(value.end)]:\(self.maxEnd)"
     }
-    var debugDescription: String {
+    public var debugDescription: String {
         "[\(value.start), \(value.end)]:\(value.length())"
     }
 }
 
 // MARK: - IntervalTree
+
 /// IntervalTree is a AVLTree (therefore a BST) that uses Interval objects as nodes. IntervalTree is constrained to Numeric types,
 /// as operations such as length make little sense outside of numerical values.
-class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
+open class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
     public typealias iNode = IntervalNode<T>
     
     public init(intervalNode: iNode) {
         super.init(node: intervalNode)
     }
-
+    
     public convenience init(array: [Interval<T>]) {
         precondition(array.count > 0)
         let inode = IntervalNode(interval: array.first!)
@@ -182,10 +186,8 @@ class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
             _ = try? insert(value: i)
         }
     }
-
-    /*
-     Returns intervals that overlap with the given interval.
-     */
+    
+    /// Returns intervals that overlap with the given interval.
     func overlaps(interval: Interval<T>) -> [Interval<T>] {
         var result: [Interval<T>] = []
         overlaps(node: root as? IntervalNode<T>, interval: interval, result: &result)
@@ -214,9 +216,7 @@ class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
         }
     }
     
-    /*
-     Returns intervals that are within the given interval.
-     */
+    /// Returns intervals that are within the given interval.
     func within(interval: Interval<T>) -> [Interval<T>] {
         var result: [Interval<T>] = []
         within(node: root as? IntervalNode<T>, interval: interval, result: &result)
@@ -245,7 +245,7 @@ class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
             }
         }
     }
-
+    
     /// Insertion is based on start value of interval
     @discardableResult override public func insert(value: Interval<T>) throws -> Self {
         // in case root is not set
@@ -281,7 +281,7 @@ class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
                 nodeCount += 1
             }
         }
-
+        
         // update maxEnd
         if let node = node as? IntervalNode {
             //print("** updating maxEnd from \(node.maxEnd) to \(max(node.maxEnd, value.end))")
@@ -301,7 +301,7 @@ class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
         draw(root)
         print("\n") // newline
     }
-
+    
     /// Since insertion is based on start value of the interval, so too will search look at start value
     public override func search(value: Interval<T>) -> BinarySearchTreeNode<Interval<T>>? {
         guard let root = self.root else {
@@ -322,7 +322,7 @@ class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
         }
         return node
     }
-
+    
     /// This is an alternative to using map on the IntervalTree, which uses the BinarySearchTree implementation of map - requiring
     /// the syntax:
     /// code<tree.map { try! Interval(start: $0.start * 2, end: $0.end * 2)}>
@@ -336,14 +336,14 @@ class IntervalTree<T: Comparable & Numeric>: AVLTree<Interval<T>> {
         flatMap(node: root, apply: formula, result: &result)
         return result
     }
-
+    
     private func flatMap(node: BinarySearchTreeNode<Interval<T>>, apply: ((T) -> T), result: inout [Interval<T>]) {
         if let left = node.left { flatMap(node: left, apply: apply, result: &result) }
-
+        
         let newInterval: Interval<T> = try! Interval(start: apply(node.value.start), end: apply(node.value.end))
         node.value = newInterval // update tree
         result.append(newInterval) // append to results (inorder)
-
+        
         if let right = node.right { flatMap(node: right, apply: apply, result: &result) }
     }
 }

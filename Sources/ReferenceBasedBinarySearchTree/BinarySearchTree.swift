@@ -1,14 +1,6 @@
 import TreeProtocol
 
-open class BinarySearchTreeNode<T>: TreeNodeProtocol {
-    public static func == (lhs: BinarySearchTreeNode<T>, rhs: BinarySearchTreeNode<T>) -> Bool {
-        return false
-    }
-
-    public static func < (lhs: BinarySearchTreeNode<T>, rhs: BinarySearchTreeNode<T>) -> Bool {
-        return false
-    }
-
+open class BinarySearchTreeNode<T: Comparable>: TreeNodeProtocol {
     public typealias Node = BinarySearchTreeNode<T>
     public var value: T
     public var left: Node?
@@ -31,12 +23,12 @@ open class BinarySearchTreeNode<T>: TreeNodeProtocol {
         return left == nil && right == nil
     }
 
-    // Returns true iff node is left of its parent
+    /// Returns true iff node is left of its parent
     public var isLeftChild: Bool {
         return parent?.left === self
     }
 
-    // Returns true iff node is right of its parent
+    /// Returns true iff node is right of its parent
     public var isRightChild: Bool {
         return parent?.right === self
     }
@@ -56,16 +48,22 @@ open class BinarySearchTreeNode<T>: TreeNodeProtocol {
     public var hasBothChildren: Bool {
         return hasLeftChild && hasRightChild
     }
+
+    // For Comparable conformance
+    public static func == (lhs: BinarySearchTreeNode<T>, rhs: BinarySearchTreeNode<T>) -> Bool {
+        return false
+    }
+
+    // For Comparable conformance
+    public static func < (lhs: BinarySearchTreeNode<T>, rhs: BinarySearchTreeNode<T>) -> Bool {
+        return false
+    }
 }
 
-/*
- A binary search tree.
- Each node stores a value and two children. The left child contains a smaller
- value; the right a larger (or equal) value.
- This tree allows duplicate elements.
- This tree does not automatically balance itself. To make sure it is balanced,
- you should insert new values in randomized order, not in sorted order.
- */
+
+/// A binary search tree. Each node stores a value and up to two children. This tree ignores any inserted duplicate elements.
+/// This tree does not automatically balance itself. To make sure it is balanced, you should insert new values in
+/// randomized order, not in sorted order.
 open class BinarySearchTree<T: Comparable>: TreeProtocol {
     public var root: BinarySearchTreeNode<T>?
     public var nodeCount: Int = 0 // keep public for classes that must override insert()
@@ -89,7 +87,8 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
     }
 
     // MARK: - Subscript access
-    /* custom collection accessor for [] notation */
+
+    /// Custom collection accessor for [] notation
     open subscript(key: T) -> T? {
         get { return search(value: key)?.value }
         // subscript doesn't support throws as of now, so swallow the error
@@ -105,15 +104,14 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
     }
 
     // MARK: - Tree Structure
-    /* How many nodes are in this tree. Performance: O(n). */
+
+    /// How many nodes are in this tree. Performance: O(n).
     public var size: Int {
         return nodeCount
     }
 
-    /*
-     Calculates the height of the tree, i.e. the distance from root to the lowest leaf. A tree of one node has height == 1.
-     Since this looks at all children of tree, performance is O(n).
-     */
+    /// Calculates the height of the tree, i.e. the distance from root to the lowest leaf. A tree of one node has height == 1.
+    /// Since this looks at all children of tree, performance is O(n).
     public func height() -> Int {
         guard let root = self.root else {
             return 0
@@ -125,14 +123,12 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         guard let node = node, let _ = self.root else {
             return 0
         }
-
         let lHeight = height(node: node.left)
         let rHeight = height(node: node.right)
-
         return max(lHeight, rHeight) + 1
     }
 
-    // Returns true iff node is in the left subtree of root
+    /// Returns true iff node is in the left subtree of root
     public func inLeftTree(value: T) -> Bool {
         // in case root is not set
         guard let root = self.root else { return false }
@@ -141,7 +137,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         return false
     }
 
-    // Returns true iff node is in the right subtree of root
+    /// Returns true iff node is in the right subtree of root
     public func inRightTree(value: T) -> Bool {
         // in case root is not set
         guard let root = self.root else { return false }
@@ -151,15 +147,16 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
     }
 
     // MARK: - Adding items
-    /*
-     Inserts a new element into the tree. You should randomly insert elements
-     at the root, to make to sure this remains a valid binary tree!
-     Performance: runs in O(h) time, where h is the height of the tree.
-     */
+    /// Inserts a new element into the tree. You should randomly insert elements at the root, to make to sure this remains a valid
+    /// binary tree! Duplicate values are ignored, but this incurs a lookup penalty.
+    /// Performance: runs in O(h) time, where h is the height of the tree.
     @discardableResult open func insert(value: T) throws -> Self {
         // in case root is not set
         guard let root = self.root else {
             throw TreeError.invalidTree
+        }
+        if self.contains(value: value) {
+            return self
         }
         return insert(tree: root, value: value, parent: nil)
     }
@@ -191,10 +188,9 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
     }
 
     // MARK: - Deleting items
-    /*
-     Deletes a node from the tree.
-     Performance: runs in O(h) time, where h is the height of the tree.
-     */
+
+    /// Deletes a node from the tree.
+    /// Performance: runs in O(h) time, where h is the height of the tree.
     @discardableResult open func remove(value: T) -> Self {
         guard let replace = search(value: value) else {
             return self
@@ -243,7 +239,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
                     // then delete the replacement
                     try? deleteNode(node: replacement)
                 }
-            // replace with min valued node from right tree
+                // replace with min valued node from right tree
             } else if let right = node.right {
                 if let replacement = minimum(node: right), replacement !== node {
                     // give the deleted node its replacement's value
@@ -256,10 +252,9 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
     }
 
     // MARK: - Searching
-    /*
-     Finds the "highest" (in tree) node with the specified value.
-     Performance: runs in O(h) time, where h is the height of the tree.
-     */
+
+    /// Finds the "highest" (in tree) node with the specified value.
+    /// Performance: runs in O(h) time, where h is the height of the tree.
     open func search(value: T) -> BinarySearchTreeNode<T>? {
         guard let root = self.root else {
             return nil
@@ -284,9 +279,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         return search(value: value) != nil
     }
 
-    /*
-     Returns the leftmost descendent of tree. O(h) time.
-     */
+    /// Returns the leftmost descendent of tree. O(h) time.
     open func minimum() -> BinarySearchTreeNode<T>? {
         var node = self.root
         while let next = node?.left {
@@ -295,9 +288,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         return node
     }
 
-    /*
-     Returns the leftmost descendent of given node. O(h) time.
-     */
+    /// Returns the leftmost descendent of given node. O(h) time.
     open func minimum(node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T>? {
         var n = node
         if !self.contains(value: n.value) { return nil }
@@ -307,9 +298,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         return n
     }
 
-    /*
-     Returns the rightmost descendent of tree. O(h) time.
-     */
+    /// Returns the rightmost descendent of tree. O(h) time.
     public func maximum() -> BinarySearchTreeNode<T>? {
         var node = self.root
         while let next = node?.right {
@@ -318,9 +307,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         return node
     }
 
-    /*
-     Returns the rightmost descendent of given node. O(h) time.
-     */
+    /// Returns the rightmost descendent of given node. O(h) time.
     public func maximum(node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T>? {
         var n = node
         if !self.contains(value: n.value) { return nil }
@@ -330,9 +317,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         return n
     }
 
-    /*
-     Finds the node whose value preceedes our value in sorted order.
-     */
+    /// Finds the node whose value preceedes our value in sorted order.
     public func predecessor(value: T) -> T? {
         guard let root = self.root else { return nil }
         guard let node = search(value: value) else { return nil }
@@ -341,9 +326,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         return result.popLast()
     }
 
-    /*
-     Finds the node whose value succeeds our value in sorted order.
-     */
+    /// Finds the node whose value succeeds our value in sorted order.
     public func successor(value: T) -> T? {
         guard let root = self.root else { return nil }
         guard let node = search(value: value) else { return nil }
@@ -353,13 +336,13 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
     }
 
     // MARK: - Traversal
-    /* In-order traversal using given function as accumulator for node values.
-     use like this:
-     ```
-     var inOrder = [Int]()
-     tree.traverseInOrder { inOrder.append($0) }
-     ```
-     */
+
+    /// In-order traversal using given function as accumulator for node values.
+    /// use like this:
+    /// ```
+    /// var inOrder = [Int]()
+    /// tree.traverseInOrder { inOrder.append($0) }
+    /// ```
     public func traverseInOrder(completion: (T) -> Void) {
         guard let root = self.root else { return }
         traverseInOrder(node: root, completion: completion)
@@ -371,13 +354,12 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         if let right = node.right { traverseInOrder(node: right, completion: completion) }
     }
 
-    /* Pre-order traversal using given function as accumulator for node values.
-     use like this:
-     ```
-     var preOrder = [Int]()
-     tree.traversePreOrder { preOrder.append($0) }
-     ```
-     */
+    /// Pre-order traversal using given function as accumulator for node values.
+    /// use like this:
+    /// ```
+    /// var preOrder = [Int]()
+    /// tree.traversePreOrder { preOrder.append($0) }
+    /// ```
     public func traversePreOrder(completion: (T) -> Void) {
         guard let root = self.root else { return }
         traversePreOrder(node: root, completion: completion)
@@ -389,13 +371,12 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         if let right = node.right { traversePreOrder(node: right, completion: completion) }
     }
 
-    /* Post-order traversal using given function as accumulator for node values.
-     use like this:
-     ```
-     var postOrder = [Int]()
-     tree.traversePostOrder { postOrder.append($0) }
-     ```
-     */
+    /// Post-order traversal using given function as accumulator for node values.
+    /// use like this:
+    /// ```
+    /// var postOrder = [Int]()
+    /// tree.traversePostOrder { postOrder.append($0) }
+    /// ```
     public func traversePostOrder(completion: (T) -> Void) {
         guard let root = self.root else { return }
         traversePostOrder(node: root, completion: completion)
@@ -407,9 +388,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
         completion(node.value)
     }
 
-    /*
-     Performs an in-order traversal, applying the given map function, and collects the values in an array.
-     */
+    /// Performs an in-order traversal, applying the given map function, and collects the values in an array.
     open func map(_ formula: (T) -> T) -> [T] {
         var result = [T]()
         guard let root = self.root else {
@@ -430,7 +409,7 @@ open class BinarySearchTree<T: Comparable>: TreeProtocol {
     }
 
 
-    // the implementation is in an extension, but the draw function is not (so it can be overridded)
+    /// Draw the tree as a flattened structure. The implementation is in an extension so that derived classes can provide their own implementations.
     open func draw() {
         guard let root = self.root else {
             print("* tree is empty *")

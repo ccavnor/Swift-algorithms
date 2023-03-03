@@ -125,6 +125,7 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         try! tree.insert(value: 3)
         try! tree.insert(value: 9)
         try! tree.insert(value: 10)
+        try! tree.insert(value: 10) // duplicate value should be ignored
         try! tree.insert(value: 1)
         try! tree.insert(value: 2)
         tree.draw()
@@ -830,12 +831,4 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertTrue(tree.height() == 5)
         tree.draw()
     }
-
-    // >>>>>> test insert redundant values (should be ignored - AVLTree allows but should not)
-
-
-
-    // >>>>>>> test different value types as:
-    // extension AVLTree where Key : SignedInteger
-
 }
