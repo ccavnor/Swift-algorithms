@@ -13,109 +13,154 @@ import Foundation
 import XCTest
 
 // TODO: break into BinarySearchTree versus BinarySearchTreeNode tests
-
-//class MockInterval<T: Comparable>: Comparable {
-//    let start: T
-//    let end: T
-//
-//    init(start: T, end: T) {
-//        self.start = start
-//        self.end = end
-//    }
-//
-//    static func < (lhs: MockInterval<T>, rhs: MockInterval<T>) -> Bool {
-//        return false
-//    }
-//
-//    static func == (lhs: MockInterval<T>, rhs: MockInterval<T>) -> Bool {
-//        return false
-//    }
-//
-//}
-//
-//class MockIntervalNodeInherit<T: Comparable>: BinarySearchTreeNode<T> {}
-//
-//class MockIntervalNode<T: Comparable>: TreeNodeProtocol {
-//    static func < (lhs: MockIntervalNode<T>, rhs: MockIntervalNode<T>) -> Bool {
-//        return false
-//    }
-//
-//    static func == (lhs: MockIntervalNode<T>, rhs: MockIntervalNode<T>) -> Bool {
-//        return false
-//    }
-//
-//    var value: MockInterval<T>
-//    // synonym for value
-//    var interval: ValueType {
-//        return value
-//    }
-//    var left: MockIntervalNode<T>?
-//    var right: MockIntervalNode<T>?
-//    var parent: MockIntervalNode<T>?
-//    var isRoot: Bool
-//    var isLeaf: Bool
-//    var isLeftChild: Bool
-//    var isRightChild: Bool
-//    var hasLeftChild: Bool
-//    var hasRightChild: Bool
-//    var hasAnyChild: Bool
-//    var hasBothChildren: Bool
-//
-//    public init(interval: MockInterval<T>) {
-//        self.value = interval
-//        left = nil
-//        right = nil
-//        parent = nil
-//        isRoot = false
-//        isLeaf = false
-//        isLeftChild = false
-//        isRightChild = false
-//        hasLeftChild = false
-//        hasRightChild = false
-//        hasAnyChild = false
-//        hasBothChildren = false
-//    }
-//}
-
-
 class ReferenceBasedBinarySearchTreeTest: XCTestCase {
 
     //=======================================
     // BinarySearchTreeNode
     //=======================================
-//    func testNodeTypes() {
-//        let node0: BinarySearchTreeNode<Int> = BinarySearchTreeNode(value: 1)
-//        let node1: BinarySearchTreeNode<Double> = BinarySearchTreeNode(value: 1.0)
-//        let node2: BinarySearchTreeNode<String> = BinarySearchTreeNode(value: "A")
-//
-//        // using mockIntervalNode<T> as type instead of primative
-//        let mockInterval = MockInterval(start: 5, end: 10)
-//        let mockIntervalNode: MockIntervalNode<Int> = MockIntervalNode(interval: mockInterval)
-//        let node3: MockIntervalNode<Int> = mockIntervalNode
-//        print(">>>>> \(mockIntervalNode.interval)")
-//        print(">>>>> \(node3.interval)")
-//
-//        // using BinarySearchTreeNode<T>
-//        let mockIntervalNodeInherit = MockIntervalNodeInherit(value: mockInterval)
-//        let node4: BinarySearchTreeNode<MockInterval<Int>> = mockIntervalNodeInherit
-//        print(">>>>> \(mockIntervalNodeInherit.value)")
-//        print(">>>>> \(node4.value)")
-//
-//        let tree = BinarySearchTree(value: node3)
-//        tree.draw()
-//
-//    }
+
+    // test isRoot and isLeaf
+    func test_isRoot_isLeaf() {
+        let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree.draw()
+
+        let r = tree.root!
+        XCTAssertTrue(r.isRoot) //8
+        XCTAssertFalse(r.left!.isRoot) //5
+        XCTAssertFalse(r.left!.left!.isRoot) //3
+        XCTAssertFalse(r.left!.right!.isRoot) //6
+        XCTAssertFalse(r.right!.isRoot) //10
+        XCTAssertFalse(r.right!.left!.isRoot) //9
+        XCTAssertFalse(r.right!.right!.isRoot) //12
+        XCTAssertFalse(r.right!.right!.right!.isRoot) //16
+
+        XCTAssertFalse(r.isLeaf) //8
+        XCTAssertFalse(r.left!.isLeaf) //5
+        XCTAssertTrue(r.left!.left!.isLeaf) //3
+        XCTAssertTrue(r.left!.right!.isLeaf) //6
+        XCTAssertFalse(r.right!.isLeaf) //10
+        XCTAssertTrue(r.right!.left!.isLeaf) //9
+        XCTAssertFalse(r.right!.right!.isLeaf) //12
+        XCTAssertTrue(r.right!.right!.right!.isLeaf) //16
+    }
+
+    // test isLeftChild and isRightChild
+    func test_isLeftChild_isRightChild() {
+        let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree.draw()
+
+        let r = tree.root!
+        XCTAssertFalse(r.isLeftChild) //8
+        XCTAssertTrue(r.left!.isLeftChild) //5
+        XCTAssertTrue(r.left!.left!.isLeftChild) //3
+        XCTAssertFalse(r.left!.right!.isLeftChild) //6
+        XCTAssertFalse(r.right!.isLeftChild) //10
+        XCTAssertTrue(r.right!.left!.isLeftChild) //9
+        XCTAssertFalse(r.right!.right!.isLeftChild) //12
+        XCTAssertFalse(r.right!.right!.right!.isLeftChild) //16
+
+        XCTAssertFalse(r.isRightChild) //8
+        XCTAssertFalse(r.left!.isRightChild) //5
+        XCTAssertFalse(r.left!.left!.isRightChild) //3
+        XCTAssertTrue(r.left!.right!.isRightChild) //6
+        XCTAssertTrue(r.right!.isRightChild) //10
+        XCTAssertFalse(r.right!.left!.isRightChild) //9
+        XCTAssertTrue(r.right!.right!.isRightChild) //12
+        XCTAssertTrue(r.right!.right!.right!.isRightChild) //16
+    }
+
+    // test hasLeftChild and hasRightChild
+    func test_hasLeftChild_hasRightChild() {
+        let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree.draw()
+
+        let r = tree.root!
+        XCTAssertTrue(r.hasLeftChild) //8
+        XCTAssertTrue(r.left!.hasLeftChild) //5
+        XCTAssertFalse(r.left!.left!.hasLeftChild) //3
+        XCTAssertFalse(r.left!.right!.hasLeftChild) //6
+        XCTAssertTrue(r.right!.hasLeftChild) //10
+        XCTAssertFalse(r.right!.left!.hasLeftChild) //9
+        XCTAssertFalse(r.right!.right!.hasLeftChild) //12
+        XCTAssertFalse(r.right!.right!.right!.hasLeftChild) //16
+
+        XCTAssertTrue(r.hasRightChild) //8
+        XCTAssertTrue(r.left!.hasRightChild) //5
+        XCTAssertFalse(r.left!.left!.hasRightChild) //3
+        XCTAssertFalse(r.left!.right!.hasRightChild) //6
+        XCTAssertTrue(r.right!.hasRightChild) //10
+        XCTAssertFalse(r.right!.left!.hasRightChild) //9
+        XCTAssertTrue(r.right!.right!.hasRightChild) //12
+        XCTAssertFalse(r.right!.right!.right!.hasRightChild) //16
+    }
 
 
-    // >>>>>>> test the calculated properties of the tree
-    // isRoot
-    // isLeaf
-    // isLeftChild
-    // isRightChild
-    // hasLeftChild
-    // hasRightChild
-    // hasAnyChild
-    // hasBothChildren
+    // test hasAnyChild and hasBothChildren
+    func test_hasAnyChild_hasBothChildren() {
+        let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree.draw()
+
+        let r = tree.root!
+        XCTAssertTrue(r.hasAnyChild) //8
+        XCTAssertTrue(r.left!.hasAnyChild) //5
+        XCTAssertFalse(r.left!.left!.hasAnyChild) //3
+        XCTAssertFalse(r.left!.right!.hasAnyChild) //6
+        XCTAssertTrue(r.right!.hasAnyChild) //10
+        XCTAssertFalse(r.right!.left!.hasAnyChild) //9
+        XCTAssertTrue(r.right!.right!.hasAnyChild) //12
+        XCTAssertFalse(r.right!.right!.right!.hasAnyChild) //16
+
+        XCTAssertTrue(r.hasBothChildren) //8
+        XCTAssertTrue(r.left!.hasBothChildren) //5
+        XCTAssertFalse(r.left!.left!.hasBothChildren) //3
+        XCTAssertFalse(r.left!.right!.hasBothChildren) //6
+        XCTAssertTrue(r.right!.hasBothChildren) //10
+        XCTAssertFalse(r.right!.left!.hasBothChildren) //9
+        XCTAssertFalse(r.right!.right!.hasBothChildren) //12
+        XCTAssertFalse(r.right!.right!.right!.hasBothChildren) //16
+    }
+
+    // test ==
+    func test_equality() {
+        let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree.draw()
+
+        let n0 = BinarySearchTreeNode(value: 8)
+        let n1 = BinarySearchTreeNode(value: 5)
+        let n2 = BinarySearchTreeNode(value: 16)
+
+        let r = tree.root!
+        XCTAssertTrue(r == n0)
+        XCTAssertFalse(r == n1)
+        XCTAssertFalse(r == n2)
+    }
+
+    // test <, >, <=, >=
+    func test_inequalities() {
+        let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree.draw()
+
+        let n0 = BinarySearchTreeNode(value: 8)
+        let n1 = BinarySearchTreeNode(value: 5)
+        let n2 = BinarySearchTreeNode(value: 16)
+
+        let r = tree.root!
+        XCTAssertFalse(r < n0)
+        XCTAssertFalse(r < n1)
+        XCTAssertTrue(r < n2)
+
+        XCTAssertFalse(r > n0)
+        XCTAssertTrue(r > n1)
+        XCTAssertFalse(r > n2)
+
+        XCTAssertTrue(r >= n0)
+        XCTAssertTrue(r >= n1)
+        XCTAssertFalse(r >= n2)
+
+        XCTAssertTrue(r <= n0)
+        XCTAssertFalse(r <= n1)
+        XCTAssertTrue(r <= n2)
+    }
 
     //=======================================
     // BinarySearchTree

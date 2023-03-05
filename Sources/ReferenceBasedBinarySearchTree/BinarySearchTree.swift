@@ -51,12 +51,12 @@ open class BinarySearchTreeNode<T: Comparable>: TreeNodeProtocol {
 
     // For Comparable conformance
     public static func == (lhs: BinarySearchTreeNode<T>, rhs: BinarySearchTreeNode<T>) -> Bool {
-        return false
+        return lhs.value == rhs.value
     }
 
     // For Comparable conformance
     public static func < (lhs: BinarySearchTreeNode<T>, rhs: BinarySearchTreeNode<T>) -> Bool {
-        return false
+        return lhs.value < rhs.value
     }
 }
 
