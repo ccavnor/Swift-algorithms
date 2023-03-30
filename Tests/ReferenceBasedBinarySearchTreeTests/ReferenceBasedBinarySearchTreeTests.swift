@@ -12,6 +12,7 @@ import TreeProtocol
 import Foundation
 import XCTest
 
+
 // TODO: break into BinarySearchTree versus BinarySearchTreeNode tests
 class ReferenceBasedBinarySearchTreeTest: XCTestCase {
 
@@ -167,12 +168,12 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
     //=======================================
     func testInsert() {
         let tree = BinarySearchTree(value: 8)
-        try! tree.insert(value: 3)
-        try! tree.insert(value: 9)
-        try! tree.insert(value: 10)
-        try! tree.insert(value: 10) // duplicate value should be ignored
-        try! tree.insert(value: 1)
-        try! tree.insert(value: 2)
+        try! tree.insert(node: BinarySearchTreeNode(value: 3))
+        try! tree.insert(node: BinarySearchTreeNode(value: 9))
+        try! tree.insert(node: BinarySearchTreeNode(value: 10))
+        try! tree.insert(node: BinarySearchTreeNode(value: 10)) // duplicate value should be ignored
+        try! tree.insert(node: BinarySearchTreeNode(value:1))
+        try! tree.insert(node: BinarySearchTreeNode(value: 2))
         tree.draw()
 
         XCTAssertEqual(tree.size, 6)
@@ -267,37 +268,44 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertEqual(tree.size, 1)
         XCTAssertEqual(tree.height(), 1)
 
-        try! tree.insert(value: 5)
+        //try! tree.insert(value: 5)
+        try! tree.insert(node: BinarySearchTreeNode(value: 5))
         tree.draw()
         XCTAssertEqual(tree.size, 2)
         XCTAssertEqual(tree.height(), 2)
 
-        try! tree.insert(value: 3)
+        //try! tree.insert(value: 3)
+        try! tree.insert(node: BinarySearchTreeNode(value: 3))
         tree.draw()
         XCTAssertEqual(tree.size, 3)
         XCTAssertEqual(tree.height(), 3)
 
-        try! tree.insert(value: 6)
+        //try! tree.insert(value: 6)
+        try! tree.insert(node: BinarySearchTreeNode(value: 6))
         tree.draw()
         XCTAssertEqual(tree.size, 4)
         XCTAssertEqual(tree.height(), 3)
 
-        try! tree.insert(value: 9)
+        //try! tree.insert(value: 9)
+        try! tree.insert(node: BinarySearchTreeNode(value: 9))
         tree.draw()
         XCTAssertEqual(tree.size, 5)
         XCTAssertEqual(tree.height(), 3)
 
-        try! tree.insert(value: 10)
+        //try! tree.insert(value: 10)
+        try! tree.insert(node: BinarySearchTreeNode(value: 10))
         tree.draw()
         XCTAssertEqual(tree.size, 6)
         XCTAssertEqual(tree.height(), 3)
 
-        try! tree.insert(value: 12)
+        //try! tree.insert(value: 12)
+        try! tree.insert(node: BinarySearchTreeNode(value: 12))
         tree.draw()
         XCTAssertEqual(tree.size, 7)
         XCTAssertEqual(tree.height(), 4)
 
-        try! tree.insert(value: 16)
+        //try! tree.insert(value: 16)
+        try! tree.insert(node: BinarySearchTreeNode(value: 16))
         tree.draw()
         XCTAssertEqual(tree.size, 8)
         XCTAssertEqual(tree.height(), 5)
@@ -316,41 +324,48 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         // test full tree ( 3 <- 5 -> 6 <- 8 -> 9 -> 10 -> 12 -> 16 )
         // where final left height is 3 and final right height is 5
         let tree = BinarySearchTree(value: 8)
-        var node = tree.search(value: 8)
+        let node = tree.search(value: 8)
         XCTAssertEqual(tree.size, 1)
         XCTAssertEqual(tree.height(node: node), 1)
 
-        try! tree.insert(value: 5)
+        //try! tree.insert(value: 5)
+        try! tree.insert(node: BinarySearchTreeNode(value: 5))
         tree.draw()
         XCTAssertEqual(tree.size, 2)
         XCTAssertEqual(tree.height(), 2)
 
-        try! tree.insert(value: 3)
+        //try! tree.insert(value: 3)
+        try! tree.insert(node: BinarySearchTreeNode(value: 3))
         tree.draw()
         XCTAssertEqual(tree.size, 3)
         XCTAssertEqual(tree.height(), 3)
 
-        try! tree.insert(value: 6)
+        //try! tree.insert(value: 6)
+        try! tree.insert(node: BinarySearchTreeNode(value: 6))
         tree.draw()
         XCTAssertEqual(tree.size, 4)
         XCTAssertEqual(tree.height(), 3)
 
-        try! tree.insert(value: 9)
+        //try! tree.insert(value: 9)
+        try! tree.insert(node: BinarySearchTreeNode(value: 9))
         tree.draw()
         XCTAssertEqual(tree.size, 5)
         XCTAssertEqual(tree.height(), 3)
 
-        try! tree.insert(value: 10)
+        //try! tree.insert(value: 10)
+        try! tree.insert(node: BinarySearchTreeNode(value: 10))
         tree.draw()
         XCTAssertEqual(tree.size, 6)
         XCTAssertEqual(tree.height(), 3)
 
-        try! tree.insert(value: 12)
+        //try! tree.insert(value: 12)
+        try! tree.insert(node: BinarySearchTreeNode(value: 12))
         tree.draw()
         XCTAssertEqual(tree.size, 7)
         XCTAssertEqual(tree.height(), 4)
 
-        try! tree.insert(value: 16)
+        //try! tree.insert(value: 16)
+        try! tree.insert(node: BinarySearchTreeNode(value: 16))
         tree.draw()
         XCTAssertEqual(tree.size, 8)
         XCTAssertEqual(tree.height(), 5)
@@ -596,6 +611,24 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertEqual(8, tree.root?.right?.left?.value)
     }
 
+    // flatMap takes function: (BinarySearchTree) -> BinarySearchTree) and returns [BinarySearchTreeNode<T>]
+    func testFlatMap() {
+        let tree = BinarySearchTree(array: [3, 1, 2, 5, 4])
+        tree.draw()
+        // first, lets just pass through the node values
+        let r0 = tree.map( { $0 } )
+        XCTAssertEqual(r0, [1,2,3,4,5])
+        // now let's apply a mutation function
+        let r1 = tree.map( { $0 * 2} )
+        XCTAssertEqual(r1, [2,4,6,8,10])
+        // make sure that tree was changed too
+        XCTAssertEqual(6, tree.root?.value)
+        XCTAssertEqual(2, tree.root?.left?.value)
+        XCTAssertEqual(4, tree.root?.left?.right?.value)
+        XCTAssertEqual(10, tree.root?.right?.value)
+        XCTAssertEqual(8, tree.root?.right?.left?.value)
+    }
+
     func testTraversing() {
         let tree = BinarySearchTree(array: [8,5,4,6,12,10,13])
         tree.draw()
@@ -673,7 +706,7 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertTrue(tree.size == 7)
 
         // root of tree
-        var root = tree.root!
+        let root = tree.root!
         XCTAssertTrue(root.value == 8)
 
         // left subtree

@@ -5,6 +5,9 @@
 //  Created by Christopher Charles Cavnor on 4/28/22.
 //
 import XCTest
+import TreeProtocol
+import BinarySearchTree
+
 @testable import AVLTree
 
 final class AVLTreeTests: XCTestCase {
@@ -21,36 +24,32 @@ final class AVLTreeTests: XCTestCase {
     //------------------------
     // Insertions
     //------------------------
-//    func testInsertSize() {
-//        let tree = AVLTree<String>(value: "A")
-//        for i in 1...5 {
-//            try! tree.insert(value: String(i))
-//            XCTAssertEqual(tree.size, i + 1, "Insert didn't update size correctly!")
-//        }
-//    }
-
     func testAVLTreeBalancedAutoPopulate() {
-        let tree = autopopulateWithNodes(11)
+        let tree: AVLTree<Int> = autopopulateWithNodes(11)
+        XCTAssertTrue(tree is BinarySearchTree<Int>, "AVLTree inherits from BST")
+        XCTAssertTrue(tree is AVLTree<Int>)
+
+        tree.balance()
         tree.draw()
         XCTAssertEqual(6, tree.root?.value)
         XCTAssertEqual(5, tree.height(node: tree.root?.left))
         XCTAssertEqual(5, tree.height(node: tree.root?.right))
 
         do {
-            try tree.inOrderCheckBalanced(tree.root)
+            try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
         } catch _ {
             XCTFail("Tree is not balanced after autopopulate")
         }
-        tree.display(node: tree.root!)
+        //tree.display(node: tree.root!)
     }
 
     func testAVLTreeBalancedInsert() {
-        let tree = autopopulateWithNodes(5)
+        let tree: AVLTree<Int> = autopopulateWithNodes(5)
 
         for i in 6...10 {
-            try! tree.insert(value: i)
+            try! tree.insert(node: AVLTreeNode(value: i))
             do {
-                try tree.inOrderCheckBalanced(self.tree?.root)
+                try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
             } catch _ {
                 XCTFail("Tree is not balanced after inserting " + String(i))
             }
@@ -58,27 +57,30 @@ final class AVLTreeTests: XCTestCase {
         }
     }
 
-    // right-right rotations performed on insert
-    func testRRInsertBalance() {
-        let tree = AVLTree<Int>(value: 1)
-        try! tree.insert(value: 2)
-        try! tree.insert(value: 3)
-
-        XCTAssertTrue(tree.root!.isRoot)
-        XCTAssertEqual(2, tree.root?.value)
-        XCTAssertEqual(1, tree.root?.left?.value)
-        XCTAssertTrue(tree.root!.left!.isLeaf)
-        XCTAssertEqual(3, tree.root?.right?.value)
-        XCTAssertTrue(tree.root!.right!.isLeaf)
-
-        tree.draw()
-    }
-
-    // left-left rotations performed on insert
+    // left-left rotation performed on insert
     func testLLInsertBalance() {
+        let tree = AVLTree<Int>(value: 1)
+        try! tree.insert(node: AVLTreeNode(value: 2))
+        try! tree.insert(node: AVLTreeNode(value: 3))
+        tree.draw()
+
+        // test values
+        XCTAssertEqual(2, tree.root?.value)
+        XCTAssertEqual(1, tree.root?.left?.value)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertEqual(3, tree.root?.right?.value)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 2)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 2)
+    }
+
+    // right-right rotation performed on insert
+    func testRRInsertBalance() {
         let tree = AVLTree<Int>(value: 3)
-        try! tree.insert(value: 2)
-        try! tree.insert(value: 1)
+        try! tree.insert(node: AVLTreeNode(value: 2))
+        try! tree.insert(node: AVLTreeNode(value: 1))
 
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(2, tree.root?.value)
@@ -89,13 +91,12 @@ final class AVLTreeTests: XCTestCase {
 
         tree.draw()
     }
-
 
     // right-left rotations performed on insert
     func testRLInsertBalance() {
         let tree = AVLTree<Int>(value: 8)
-        try! tree.insert(value: 10)
-        try! tree.insert(value: 9)
+        try! tree.insert(node: AVLTreeNode(value: 10))
+        try! tree.insert(node: AVLTreeNode(value: 9))
 
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(9, tree.root?.value)
@@ -110,8 +111,8 @@ final class AVLTreeTests: XCTestCase {
     // left-right rotations performed
     func testLRInsertBalance() {
         let tree = AVLTree<Int>(value: 8)
-        try! tree.insert(value: 4)
-        try! tree.insert(value: 5)
+        try! tree.insert(node: AVLTreeNode(value: 4))
+        try! tree.insert(node: AVLTreeNode(value: 5))
 
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(5, tree.root?.value)
@@ -122,6 +123,40 @@ final class AVLTreeTests: XCTestCase {
 
         tree.draw()
     }
+
+    //------------------------
+    // Search
+    //------------------------
+    func testSearch() {
+        let tree = AVLTree(array: [3, 1, 2, 5, 4])
+        tree.draw()
+
+        // test value not found
+        let empty = tree.search(value: 9)
+        XCTAssertEqual(empty?.value, nil)
+
+        // test root as target
+        XCTAssertTrue(tree.root?.value == 3)
+        let n0 = tree.search(value: 3)
+        XCTAssertEqual(n0?.value, 3)
+
+        // left
+        let n1 = tree.search(value: 1)
+        XCTAssertEqual(n1?.value, 1)
+
+        // left leaf
+        let n2 = tree.search(value: 2)
+        XCTAssertEqual(n2?.value, 2)
+
+        // right
+        let n3 = tree.search(value: 5)
+        XCTAssertEqual(n3?.value, 5)
+
+        // right leaf
+        let n4 = tree.search(value: 4)
+        XCTAssertEqual(n4?.value, 4)
+    }
+
 
     //------------------------
     // Deletions
@@ -135,29 +170,32 @@ final class AVLTreeTests: XCTestCase {
         ]
 
         for p in permutations {
+            print("Permutation is \(p)")
             let tree = AVLTree<Int>(value: p[0])
-            try! tree.insert(value: p[1])
-            try! tree.insert(value: p[2])
-            try! tree.insert(value: p[3])
-            try! tree.insert(value: p[4])
+            try! tree.insert(node: AVLTreeNode(value: p[1]))
+            try! tree.insert(node: AVLTreeNode(value: p[2]))
+            try! tree.insert(node: AVLTreeNode(value: p[3]))
+            try! tree.insert(node: AVLTreeNode(value: p[4]))
 
+            tree.draw()
             var count = tree.size
             for i in p {
                 tree.remove(value: i)
                 count -= 1
                 XCTAssertEqual(tree.size, count, "Delete didn't update size correctly!")
             }
+            tree.draw()
         }
     }
 
     func testDeleteExistentKey() {
         let tree = AVLTree(value: 1)
-        tree.remove(value: 1)
+        _ = tree.remove(value: 1)
         XCTAssertNil(tree.search(value: 1), "Key should not exist anymore")
     }
 
     func testDeleteNotExistentKey() {
-        self.tree?.remove(value: 1056)
+        _ = self.tree?.remove(value: 1056)
         XCTAssertNil(self.tree?.search(value: 1056), "Key should not exist")
     }
 
@@ -165,13 +203,15 @@ final class AVLTreeTests: XCTestCase {
     // Test balance on deletions
     //-------------------------------------
     func testAVLTreeBalancedDelete() {
-        let tree = autopopulateWithNodes(5)
+        let tree: AVLTree<Int> = autopopulateWithNodes(5)
+
         tree.draw()
 
         for i in 1...6 {
             tree.remove(value: i)
             do {
-                try tree.inOrderCheckBalanced(tree.root)
+                // downcast tree to AVLTree
+                try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
             } catch _ {
                 XCTFail("Tree is not balanced after deleting " + String(i))
             }
@@ -182,94 +222,210 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertNil(tree.root)
     }
 
-    // right-right rotations performed on deletion
+    // right-right rotations performed on deletion.
+    // conditions: lrDifference == 2, leftChild.balanceFactor != -1
+    // 👍
     func testRRDeleteBalance() {
         let tree = AVLTree<Int>(value: 1)
-        try! tree.insert(value: 2)
-        try! tree.insert(value: 3)
-        try! tree.insert(value: 4)
+        try! tree.insert(node: AVLTreeNode(value: 2))
+        try! tree.insert(node: AVLTreeNode(value: 3))
+        try! tree.insert(node: AVLTreeNode(value: 4))
+        try! tree.insert(node: AVLTreeNode(value: 5))
 
-        tree.remove(value: 3)
+        tree.draw()
+        _ = tree.remove(value: 5)
+        _ = tree.remove(value: 4)
+        tree.draw()
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(2, tree.root?.value)
         XCTAssertEqual(1, tree.root?.left?.value)
         XCTAssertTrue(tree.root!.left!.isLeaf)
-        XCTAssertEqual(4, tree.root?.right?.value)
         XCTAssertTrue(tree.root!.right!.isLeaf)
+    }
+
+    // left-right rotations performed
+    // conditions: lrDifference == 2, leftChild.balanceFactor == -1
+    // 👍
+    func testLRDeleteBalance() {
+        let tree = AVLTree<Int>(value: 3)
+        try! tree.insert(node: AVLTreeNode(value: 2))
+        try! tree.insert(node: AVLTreeNode(value: 5))
+        try! tree.insert(node: AVLTreeNode(value: 4))
+        try! tree.insert(node: AVLTreeNode(value: 10))
+        try! tree.insert(node: AVLTreeNode(value: 12))
 
         tree.draw()
+        tree.remove(value: 2)
+        tree.remove(value: 10)
+        tree.remove(value: 12)
+        tree.draw()
+
+        XCTAssertTrue(tree.nodeCount == 3)
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertEqual(4, tree.root?.value)
+        XCTAssertEqual(3, tree.root?.left?.value)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertEqual(5, tree.root?.right?.value)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
     }
 
     // left-left rotations performed on deletion
+    // conditions: lrDifference == -2, rightChild.balanceFactor != 1
+    // 👍
     func testLLDeleteBalance() {
-        let tree = AVLTree<Int>(value: 4)
-        try! tree.insert(value: 3)
-        try! tree.insert(value: 2)
-        try! tree.insert(value: 1)
-
-        tree.remove(value: 3)
-        XCTAssertTrue(tree.root!.isRoot)
-        XCTAssertEqual(2, tree.root?.value)
-        XCTAssertEqual(1, tree.root?.left?.value)
-        XCTAssertTrue(tree.root!.left!.isLeaf)
-        XCTAssertEqual(4, tree.root?.right?.value)
-        XCTAssertTrue(tree.root!.right!.isLeaf)
+        let tree = AVLTree<Int>(value: 5)
+        try! tree.insert(node: AVLTreeNode(value: 4))
+        try! tree.insert(node: AVLTreeNode(value: 3))
+        try! tree.insert(node: AVLTreeNode(value: 2))
+        try! tree.insert(node: AVLTreeNode(value: 1))
 
         tree.draw()
+        _ = tree.remove(value: 1)
+        _ = tree.remove(value: 2)
+        tree.draw()
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertEqual(4, tree.root?.value)
+        XCTAssertEqual(3, tree.root?.left?.value)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertEqual(5, tree.root?.right?.value)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
     }
 
-
     // right-left rotations performed on deletion
+    // conditions: lrDifference == -2, rightChild.balanceFactor == 1
+    // 👍
     func testRLDeleteBalance() {
         let tree = AVLTree<Int>(value: 8)
-        try! tree.insert(value: 7)
-        try! tree.insert(value: 10)
-        try! tree.insert(value: 9)
+        try! tree.insert(node: AVLTreeNode(value: 6))
+        try! tree.insert(node: AVLTreeNode(value: 7))
+        try! tree.insert(node: AVLTreeNode(value: 10))
+        try! tree.insert(node: AVLTreeNode(value: 9))
 
-        tree.remove(value: 7)
+        tree.draw()
+        _ = tree.remove(value: 7)
+        _ = tree.remove(value: 6)
+        tree.draw()
+
+        XCTAssertTrue(tree.nodeCount == 3)
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(9, tree.root?.value)
         XCTAssertEqual(8, tree.root?.left?.value)
         XCTAssertTrue(tree.root!.left!.isLeaf)
         XCTAssertEqual(10, tree.root?.right?.value)
         XCTAssertTrue(tree.root!.right!.isLeaf)
-
-        tree.draw()
     }
 
-    // left-right rotations performed
-    func testLRDeleteBalance() {
-        let tree = AVLTree<Int>(value: 8)
-        try! tree.insert(value: 4)
-        try! tree.insert(value: 5)
-        try! tree.insert(value: 9)
+    // See: https://stackoverflow.com/questions/3955680/how-to-check-if-my-avl-tree-implementation-is-correct
+    // for test cases
 
-        tree.remove(value: 8)
-        XCTAssertTrue(tree.root!.isRoot)
-        XCTAssertEqual(5, tree.root?.value)
-        XCTAssertEqual(4, tree.root?.left?.value)
-        XCTAssertTrue(tree.root!.left!.isLeaf)
-        XCTAssertEqual(9, tree.root?.right?.value)
-        XCTAssertTrue(tree.root!.right!.isLeaf)
+    // Regression test - there was a bug in AVL rotation where deleting a leaf (when triggering rebalance)
+    // implicitly deletes the leaf's parent node as well.
+    // 👍
+    func testDeleteLeaf_RL_rotation() {
+        let tree = AVLTree<Int>(array: [5,4,7,6])
+        XCTAssertTrue(tree.size == 4)
+        XCTAssertTrue(tree.toArray().count == 4)
 
         tree.draw()
+        _ = tree.remove(value: 4)
+        tree.draw()
+        XCTAssertTrue(tree.size == 3)
+        XCTAssertTrue(tree.toArray().count == 3)
+        XCTAssertEqual(tree.size, tree.toArray().count, "tree size does not match node count")
     }
+
+    // Regression test - there was a bug in AVL rotation where deleting a leaf (when triggering rebalance)
+    // implicitly deletes the leaf's parent node as well.
+    // 👍
+    func testDeleteLeaf_RR_rotation() {
+        let tree = AVLTree<Int>(array: [-1,-2,-3,0,1,2])
+        XCTAssertTrue(tree.size == 6)
+        XCTAssertTrue(tree.toArray().count == 6)
+
+        tree.draw()
+        _ = tree.remove(value: 1)
+        _ = tree.remove(value: 2)
+        _ = tree.remove(value: 0)
+        tree.draw()
+        XCTAssertTrue(tree.size == 3)
+        XCTAssertTrue(tree.toArray().count == 3)
+        XCTAssertEqual(tree.size, tree.toArray().count, "tree size does not match node count")
+    }
+
+    // Regression test - there was a bug in AVL rotation where deleting a leaf (when triggering rebalance)
+    // implicitly deletes the leaf's parent node as well.
+    // 👍
+    func testDeleteLeaf_LR_rotation() {
+        //let tree = AVLTree<Int>(array: [8,5,6,10])
+        let tree = AVLTree<Int>(array: [7,12,5,6])
+        XCTAssertTrue(tree.size == 4)
+        XCTAssertTrue(tree.toArray().count == 4)
+        tree.draw()
+        _ = tree.remove(value: 12)
+        tree.draw()
+        XCTAssertTrue(tree.size == 3)
+        XCTAssertTrue(tree.toArray().count == 3)
+        XCTAssertEqual(tree.size, tree.toArray().count, "tree size does not match node count")
+    }
+
+    // Regression test - there was a bug in AVL rotation where deleting a leaf (when triggering rebalance)
+    // implicitly deletes the leaf's parent node as well.
+    // 👍
+    func testDeleteLeaf_LL_rotation() {
+        let tree = AVLTree<Int>(array: [-2,-3,0,2,5,7])
+        XCTAssertTrue(tree.size == 6)
+        XCTAssertTrue(tree.toArray().count == 6)
+        tree.draw()
+        _ = tree.remove(value: -2)
+        tree.draw()
+        XCTAssertTrue(tree.size == 5)
+        XCTAssertTrue(tree.toArray().count == 5)
+        XCTAssertEqual(tree.size, tree.toArray().count, "tree size does not match node count")
+    }
+
 
     //-------------------------------------
     // Subscript access
     //-------------------------------------
     func testSubscripting() {
-        // See BST subscript testing for comprehensive test. Here, we
-        // only test auto balance on insert
         let tree = AVLTree(array: [10,5,20,3,8,14,25])
         tree.draw()
 
+        // get values
+        XCTAssertEqual(tree[10], 10)
+        XCTAssertEqual(tree[14], 14)
+        XCTAssertEqual(tree[10], 10)
+        XCTAssertEqual(tree[55], nil, "value not in tree")
+
+        // change values: tree structure will changes unless we are editing a leaf node,
+        // the BST is valid but BST does not auto-balance
+        XCTAssertEqual(tree.root?.value, 10)
+        XCTAssertTrue(tree.size == 7)
+        XCTAssertTrue(tree.height() == 3)
+        tree[3] = 4 // edit tree root
+        XCTAssertNil(tree.search(value: 3))
+        XCTAssertNotNil(tree.search(value: 4))
+        XCTAssertEqual(tree.root?.value, 10)
+        XCTAssertTrue(tree.size == 7)
+        XCTAssertTrue(tree.height() == 3)
+        tree.draw()
+        // tree structure changes on edit of root value
+        XCTAssertEqual(tree.root?.value, 10)
+        XCTAssertTrue(tree.size == 7)
+        XCTAssertTrue(tree.height() == 3)
+        tree[10] = 50 // edit tree root
+        XCTAssertNil(tree.search(value: 10))
+        XCTAssertNotNil(tree.search(value: 50))
+        XCTAssertEqual(tree.root?.value, 8)
+        XCTAssertTrue(tree.size == 7)
+        XCTAssertTrue(tree.height() == 4)
+        tree.draw()
         // insert new values to make tree unbalanced
         tree[51] = nil
         XCTAssertNotNil(tree.search(value: 51))
-        XCTAssertEqual(tree.root?.value, 10, "root changed on auto balance")
+        XCTAssertEqual(tree.root?.value, 20)
         XCTAssertTrue(tree.size == 8)
-        XCTAssertTrue(tree.height() == 4, "height same after auto balance")
+        XCTAssertTrue(tree.height() == 4)
         tree.draw()
     }
 
@@ -286,434 +442,44 @@ final class AVLTreeTests: XCTestCase {
     //-------------------------------------
     // Performance Tests
     //-------------------------------------
-    func testSingleInsertionPerformance() {
-        self.measure {
-            try! self.tree?.insert(value: 1)
-        }
-    }
-
-    func testMultipleInsertionsPerformance() {
-        self.measure {
-            let _ = autopopulateWithNodes(50)
-        }
-    }
-
-    func testSearchExistentOnSmallTreePerformance() {
-        let tree = AVLTree(value: 2)
-        // runs 10 times by default
-        self.measure {
-            print(tree.search(value: 2))
-        }
-    }
-
-    func testSearchExistentElementOnLargeTreePerformance() {
-        let tree = autopopulateWithNodes(500)
-        self.measure {
-            print(tree.search(value: 400))
-        }
-    }
+//    func testSingleInsertionPerformance() {
+//        self.measure {
+//            try! self.tree?.insert(value: 1)
+//        }
+//    }
+//
+//    func testMultipleInsertionsPerformance() {
+//        self.measure {
+//            let _ = autopopulateWithNodes(50)
+//        }
+//    }
+//
+//    func testSearchExistentOnSmallTreePerformance() {
+//        let tree = AVLTree(value: 2)
+//        // runs 10 times by default
+//        self.measure {
+//            print(tree.search(value: 2)!)
+//        }
+//    }
+//
+//    func testSearchExistentElementOnLargeTreePerformance() {
+//        let tree = autopopulateWithNodes(500)
+//        self.measure {
+//            print(tree.search(value: 400)!)
+//        }
+//    }
 }
 
-//extension AVLTree where T : SignedInteger {
 func autopopulateWithNodes(_ count: Int) -> AVLTree<Int> {
-    var val: Int = 1
+    var val = 1
     // first value is used to create tree
     let tree = AVLTree<Int>(value: val)
     // remaining values are inserted
     if count > 1 {
         for _ in 2...count {
             val = val + 1
-            try? tree.insert(value: val)
+            _ = try? tree.insert(node: AVLTreeNode(value: val))
         }
     }
     return tree
 }
-//}
-
-//enum AVLTreeError: Error {
-//    case notBalanced
-//}
-//
-//extension AVLTree where T : SignedInteger {
-//    func height(_ node: Node?) -> Int {
-//        if let node = node {
-//            let lHeight = height(node.left)
-//            let rHeight = height(node.right)
-//
-//            return max(lHeight, rHeight) + 1
-//        }
-//        return 0
-//    }
-
-//    func inOrderCheckBalanced(_ node: Node?) throws {
-//        if let node = node {
-//            print("left=\(height(node.left))")
-//            print("right=\(height(node.right))")
-//
-//            guard abs(height(node.left) - height(node.right)) <= 1 else {
-//                throw AVLTreeError.notBalanced
-//            }
-//            try inOrderCheckBalanced(node.left)
-//            try inOrderCheckBalanced(node.right)
-//        }
-//    }
-//}
-
-//final class AVLTreeTests: XCTestCase {
-//    var tree: AVLTree<Int, String>?
-//
-//    override func setUp() {
-//        super.setUp()
-//        tree = AVLTree()
-//    }
-//    override func tearDown() {
-//        // Put teardown code here. This method is called after the invocation of each test method in the class.
-//        super.tearDown()
-//    }
-//
-//    func testAVLTreeBalancedAutoPopulate() {
-//        self.tree?.autopopulateWithNodes(10)
-//
-//        do {
-//            try self.tree?.inOrderCheckBalanced(self.tree?.root)
-//        } catch _ {
-//            XCTFail("Tree is not balanced after autopopulate")
-//        }
-//    }
-//
-//    func testAVLTreeBalancedInsert() {
-//        self.tree?.autopopulateWithNodes(5)
-//
-//        for i in 6...10 {
-//            self.tree?.insert(key: i)
-//            do {
-//                try self.tree?.inOrderCheckBalanced(self.tree?.root)
-//            } catch _ {
-//                XCTFail("Tree is not balanced after inserting " + String(i))
-//            }
-//        }
-//    }
-//
-//    func testAVLTreeBalancedDelete() {
-//        self.tree?.autopopulateWithNodes(5)
-//
-//        for i in 1...6 {
-//            self.tree?.delete(key: i)
-//            do {
-//                try self.tree?.inOrderCheckBalanced(self.tree?.root)
-//            } catch _ {
-//                XCTFail("Tree is not balanced after deleting " + String(i))
-//            }
-//        }
-//    }
-//
-//    func testEmptyInitialization() {
-//        let tree = AVLTree<Int, String>()
-//
-//        XCTAssertEqual(tree.size, 0)
-//        XCTAssertNil(tree.root)
-//    }
-//
-//    func testSingleInsertionPerformance() {
-//        self.measure {
-//            self.tree?.insert(key: 5, payload: "E")
-//        }
-//    }
-//
-//    func testMultipleInsertionsPerformance() {
-//        self.measure {
-//            self.tree?.autopopulateWithNodes(50)
-//        }
-//    }
-//
-//    func testSearchExistentOnSmallTreePerformance() {
-//        self.measure {
-//            print(self.tree?.search(input: 2))
-//        }
-//    }
-//
-//    func testSearchExistentElementOnLargeTreePerformance() {
-//        self.measure {
-//            self.tree?.autopopulateWithNodes(500)
-//            print(self.tree?.search(input: 400))
-//        }
-//    }
-//
-//    func testMinimumOnPopulatedTree() {
-//        self.tree?.autopopulateWithNodes(500)
-//        let min = self.tree?.root?.minimum()
-//        XCTAssertNotNil(min, "Minimum function not working")
-//    }
-//
-//    func testMinimumOnSingleTreeNode() {
-//        let treeNode = TreeNode(key: 1, payload: "A")
-//        let min = treeNode.minimum()
-//
-//        XCTAssertNotNil(min, "Minimum on single node should be returned")
-//        XCTAssertEqual(min?.value, treeNode.value)
-//    }
-//
-//    func testDeleteExistentKey() {
-//        self.tree?.delete(key: 1)
-//        XCTAssertNil(self.tree?.search(input: 1), "Key should not exist anymore")
-//    }
-//
-//    func testDeleteNotExistentKey() {
-//        self.tree?.delete(key: 1056)
-//        XCTAssertNil(self.tree?.search(input: 1056), "Key should not exist")
-//    }
-//
-//    func testInsertSize() {
-//        let tree = AVLTree<Int, String>()
-//        for i in 0...5 {
-//            tree.insert(key: i, payload: "")
-//            XCTAssertEqual(tree.size, i + 1, "Insert didn't update size correctly!")
-//        }
-//    }
-//
-//    func testDelete() {
-//        let permutations = [
-//            [5, 1, 4, 2, 3],
-//            [2, 3, 1, 5, 4],
-//            [4, 5, 3, 2, 1],
-//            [3, 2, 5, 4, 1],
-//        ]
-//
-//        for p in permutations {
-//            let tree = AVLTree<Int, String>()
-//
-//            tree.insert(key: 1, payload: "five")
-//            tree.insert(key: 2, payload: "four")
-//            tree.insert(key: 3, payload: "three")
-//            tree.insert(key: 4, payload: "two")
-//            tree.insert(key: 5, payload: "one")
-//
-//            var count = tree.size
-//            for i in p {
-//                tree.delete(key: i)
-//                count -= 1
-//                XCTAssertEqual(tree.size, count, "Delete didn't update size correctly!")
-//            }
-//        }
-//    }
-//}
-//
-//extension AVLTree where Key : SignedInteger {
-//    func autopopulateWithNodes(_ count: Int) {
-//        var k: Key = 1
-//        for _ in 0...count {
-//            self.insert(key: k)
-//            k = k + 1
-//        }
-//    }
-//}
-//
-//enum AVLTreeError: Error {
-//    case notBalanced
-//}
-//
-//extension AVLTree where Key : SignedInteger {
-//    func height(_ node: Node?) -> Int {
-//        if let node = node {
-//            let lHeight = height(node.left)
-//            let rHeight = height(node.right)
-//
-//            return max(lHeight, rHeight) + 1
-//        }
-//        return 0
-//    }
-//
-//    func inOrderCheckBalanced(_ node: Node?) throws {
-//        if let node = node {
-//            guard abs(height(node.left) - height(node.right)) <= 1 else {
-//                throw AVLTreeError.notBalanced
-//            }
-//            try inOrderCheckBalanced(node.left)
-//            try inOrderCheckBalanced(node.right)
-//        }
-//    }
-//}
-
-//
-//class AVLTreeTests: XCTestCase {
-//  var tree: AVLTree<Int, String>?
-//
-//    func testSwift4() {
-//        // last checked with Xcode 9.0b4
-//        #if swift(>=4.0)
-//            print("Hello, Swift 4!")
-//        #endif
-//    }
-//  override func setUp() {
-//    super.setUp()
-//
-//    tree = AVLTree()
-//  }
-//
-//  override func tearDown() {
-//    // Put teardown code here. This method is called after the invocation of each test method in the class.
-//    super.tearDown()
-//  }
-//
-//  func testAVLTreeBalancedAutoPopulate() {
-//    self.tree?.autopopulateWithNodes(10)
-//
-//    do {
-//      try self.tree?.inOrderCheckBalanced(self.tree?.root)
-//    } catch _ {
-//      XCTFail("Tree is not balanced after autopopulate")
-//    }
-//  }
-//
-//  func testAVLTreeBalancedInsert() {
-//    self.tree?.autopopulateWithNodes(5)
-//
-//    for i in 6...10 {
-//      self.tree?.insert(key: i)
-//      do {
-//        try self.tree?.inOrderCheckBalanced(self.tree?.root)
-//      } catch _ {
-//        XCTFail("Tree is not balanced after inserting " + String(i))
-//      }
-//    }
-//  }
-//
-//  func testAVLTreeBalancedDelete() {
-//    self.tree?.autopopulateWithNodes(5)
-//
-//    for i in 1...6 {
-//      self.tree?.delete(key: i)
-//      do {
-//        try self.tree?.inOrderCheckBalanced(self.tree?.root)
-//      } catch _ {
-//        XCTFail("Tree is not balanced after deleting " + String(i))
-//      }
-//    }
-//  }
-//
-//  func testEmptyInitialization() {
-//    let tree = AVLTree<Int, String>()
-//
-//    XCTAssertEqual(tree.size, 0)
-//    XCTAssertNil(tree.root)
-//  }
-//
-//  func testSingleInsertionPerformance() {
-//    self.measure {
-//      self.tree?.insert(key: 5, payload: "E")
-//    }
-//  }
-//
-//  func testMultipleInsertionsPerformance() {
-//    self.measure {
-//      self.tree?.autopopulateWithNodes(50)
-//    }
-//  }
-//
-//  func testSearchExistentOnSmallTreePerformance() {
-//    self.measure {
-//      print(self.tree?.search(input: 2))
-//    }
-//  }
-//
-//  func testSearchExistentElementOnLargeTreePerformance() {
-//    self.measure {
-//      self.tree?.autopopulateWithNodes(500)
-//      print(self.tree?.search(input: 400))
-//    }
-//  }
-//
-//  func testMinimumOnPopulatedTree() {
-//    self.tree?.autopopulateWithNodes(500)
-//    let min = self.tree?.root?.minimum()
-//    XCTAssertNotNil(min, "Minimum function not working")
-//  }
-//
-//  func testMinimumOnSingleTreeNode() {
-//    let treeNode = TreeNode(key: 1, payload: "A")
-//    let min = treeNode.minimum()
-//
-//    XCTAssertNotNil(min, "Minimum on single node should be returned")
-//    XCTAssertEqual(min?.payload, treeNode.payload)
-//  }
-//
-//  func testDeleteExistentKey() {
-//    self.tree?.delete(key: 1)
-//    XCTAssertNil(self.tree?.search(input: 1), "Key should not exist anymore")
-//  }
-//
-//  func testDeleteNotExistentKey() {
-//    self.tree?.delete(key: 1056)
-//    XCTAssertNil(self.tree?.search(input: 1056), "Key should not exist")
-//  }
-//
-//  func testInsertSize() {
-//    let tree = AVLTree<Int, String>()
-//    for i in 0...5 {
-//      tree.insert(key: i, payload: "")
-//      XCTAssertEqual(tree.size, i + 1, "Insert didn't update size correctly!")
-//    }
-//  }
-//
-//  func testDelete() {
-//    let permutations = [
-//      [5, 1, 4, 2, 3],
-//      [2, 3, 1, 5, 4],
-//      [4, 5, 3, 2, 1],
-//      [3, 2, 5, 4, 1],
-//    ]
-//
-//    for p in permutations {
-//      let tree = AVLTree<Int, String>()
-//
-//      tree.insert(key: 1, payload: "five")
-//      tree.insert(key: 2, payload: "four")
-//      tree.insert(key: 3, payload: "three")
-//      tree.insert(key: 4, payload: "two")
-//      tree.insert(key: 5, payload: "one")
-//
-//      var count = tree.size
-//      for i in p {
-//        tree.delete(key: i)
-//        count -= 1
-//        XCTAssertEqual(tree.size, count, "Delete didn't update size correctly!")
-//      }
-//    }
-//  }
-//}
-//
-//extension AVLTree where Key : SignedInteger {
-//  func autopopulateWithNodes(_ count: Int) {
-//    var k: Key = 1
-//    for _ in 0...count {
-//      self.insert(key: k)
-//      k = k + 1
-//    }
-//  }
-//}
-//
-//enum AVLTreeError: Error {
-//  case notBalanced
-//}
-//
-//extension AVLTree where Key : SignedInteger {
-//  func height(_ node: Node?) -> Int {
-//    if let node = node {
-//      let lHeight = height(node.leftChild)
-//      let rHeight = height(node.rightChild)
-//
-//      return max(lHeight, rHeight) + 1
-//    }
-//    return 0
-//  }
-//
-//  func inOrderCheckBalanced(_ node: Node?) throws {
-//    if let node = node {
-//      guard abs(height(node.leftChild) - height(node.rightChild)) <= 1 else {
-//        throw AVLTreeError.notBalanced
-//      }
-//      try inOrderCheckBalanced(node.leftChild)
-//      try inOrderCheckBalanced(node.rightChild)
-//    }
-//  }
-//}

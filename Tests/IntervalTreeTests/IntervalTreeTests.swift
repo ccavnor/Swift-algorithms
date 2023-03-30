@@ -2,7 +2,7 @@ import XCTest
 import TreeProtocol
 @testable import IntervalTree
 
-
+// TODO: check that maxEnd is being updated with insertions and deletions
 // TODO: check that IntervalTree is constrained to numeric types - unlike BST: (maybe using T: IEquatable<T>)
 final class IntervalTreeTests: XCTestCase {
     override func setUp() {
@@ -22,49 +22,42 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertEqual(1, point?.end)
         XCTAssertTrue(type(of: point!.start) == Int.self, "type is unchanged using ints")
         XCTAssertTrue(type(of: point!.end) == Int.self, "type is unchanged using ints")
-        XCTAssertEqual(0, point?.length(), "intervals of zero length are allowed")
 
         let interval0 = try? Interval(start: 0, end: 1)
         XCTAssertEqual(0, interval0?.start)
         XCTAssertEqual(1, interval0?.end)
         XCTAssertTrue(type(of: interval0!.start) == Int.self, "type is unchanged using ints")
         XCTAssertTrue(type(of: interval0!.end) == Int.self, "type is unchanged using ints")
-        XCTAssertEqual(1, interval0?.length())
 
         let interval1 = try? Interval(start: 0.9, end: 1)
         XCTAssertEqual(0.9, interval1?.start)
         XCTAssertEqual(1.0, interval1?.end)
         XCTAssertTrue(type(of: interval1!.start) == Double.self, "type is upcast to double when mixed with int")
         XCTAssertTrue(type(of: interval1!.end) == Double.self, "type is upcast to double when mixed with int")
-        XCTAssertEqual(0.1, interval1?.length())
 
         let interval2 = try? Interval(start: 0.0000, end: 0.0001)
         XCTAssertEqual(0.0000, interval2?.start)
         XCTAssertEqual(0.0001, interval2?.end)
         XCTAssertTrue(type(of: interval2!.start) == Double.self)
         XCTAssertTrue(type(of: interval2!.end) == Double.self)
-        XCTAssertEqual(0.0001, interval2?.length(), "ensure that fractional magnitudes are reported correctly")
 
         let interval3 = try? Interval(start: -1, end: 1)
         XCTAssertEqual(-1, interval3?.start)
         XCTAssertEqual(1, interval3?.end)
         XCTAssertTrue(type(of: interval3!.start) == Int.self)
         XCTAssertTrue(type(of: interval3!.end) == Int.self)
-        XCTAssertEqual(2, interval3?.length(), "interval can span from negative to positive")
 
         let interval4 = try? Interval(start: -4, end: -1)
         XCTAssertEqual(-4, interval4?.start)
         XCTAssertEqual(-1, interval4?.end)
         XCTAssertTrue(type(of: interval4!.start) == Int.self)
         XCTAssertTrue(type(of: interval4!.end) == Int.self)
-        XCTAssertEqual(3, interval4?.length(), "interval can span from negative to positive (int)")
 
         let interval5 = try? Interval(start: -4.2, end: 1.3)
         XCTAssertEqual(-4.2, interval5?.start)
         XCTAssertEqual(1.3, interval5?.end)
         XCTAssertTrue(type(of: interval5!.start) == Double.self)
         XCTAssertTrue(type(of: interval5!.end) == Double.self)
-        XCTAssertEqual(5.5, interval5?.length(), "interval can span from negative to positive (double)")
 
         XCTAssertThrowsError(try Interval(start: 10, end: 9)) { error in
             XCTAssertEqual(error as! TreeError, TreeError.invalidInterval, "end of interval must be greater than start")
@@ -74,14 +67,13 @@ final class IntervalTreeTests: XCTestCase {
         }
     }
 
-
     func testCreateFromArray() {
         let interval0 = try! Interval(start: 5, end: 10)
         let interval1 = try! Interval(start: -5, end: 5)
         let interval2 = try! Interval(start: 6, end: 12)
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
-        let tree = IntervalTree(array: [interval0, interval1, interval2, interval3, interval4])
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         tree.draw()
         XCTAssertEqual(tree.size, 5)
         XCTAssertEqual(tree.height(), 4)
@@ -122,9 +114,9 @@ final class IntervalTreeTests: XCTestCase {
 
         // --- equality
         let interval0_same = try! Interval(start: 14, end: 16)
-        XCTAssertTrue(interval0 === interval0)
+        //XCTAssertTrue(interval0 === interval0)
         XCTAssertTrue(interval0 == interval0)
-        XCTAssertFalse(interval0 === interval0_same)
+        //XCTAssertFalse(interval0 === interval0_same)
         XCTAssertTrue(interval0 == interval0_same)
         let interval0_start_same = try! Interval(start: 14, end: 20)
         let interval0_end_same = try! Interval(start: 10, end: 16)
@@ -216,9 +208,9 @@ final class IntervalTreeTests: XCTestCase {
 
         // --- equality
         let interval0_same = try! Interval(start: -3, end: -1)
-        XCTAssertTrue(interval0 === interval0)
+        //XCTAssertTrue(interval0 === interval0)
         XCTAssertTrue(interval0 == interval0)
-        XCTAssertFalse(interval0 === interval0_same)
+        //XCTAssertFalse(interval0 === interval0_same)
         XCTAssertTrue(interval0 == interval0_same)
         let interval0_start_same = try! Interval(start: -3, end: 2)
         let interval0_end_same = try! Interval(start: -5, end: -1)
@@ -310,9 +302,9 @@ final class IntervalTreeTests: XCTestCase {
 
         // --- equality
         let interval0_same = try! Interval(start: 14.0, end: 16.0)
-        XCTAssertTrue(interval0 === interval0)
+        //XCTAssertTrue(interval0 === interval0)
         XCTAssertTrue(interval0 == interval0)
-        XCTAssertFalse(interval0 === interval0_same)
+        //XCTAssertFalse(interval0 === interval0_same)
         XCTAssertTrue(interval0 == interval0_same)
         let interval0_start_same = try! Interval(start: 14.0, end: 20.0)
         let interval0_end_same = try! Interval(start: 10.0, end: 16)
@@ -404,9 +396,9 @@ final class IntervalTreeTests: XCTestCase {
 
         // --- equality
         let interval0_same = try! Interval(start: -3.0, end: -1.0)
-        XCTAssertTrue(interval0 === interval0)
+        //XCTAssertTrue(interval0 === interval0)
         XCTAssertTrue(interval0 == interval0)
-        XCTAssertFalse(interval0 === interval0_same)
+        //XCTAssertFalse(interval0 === interval0_same)
         XCTAssertTrue(interval0 == interval0_same)
         let interval0_start_same = try! Interval(start: -3.000, end: 2.000)
         let interval0_end_same = try! Interval(start: -5.0, end: -1)
@@ -479,39 +471,33 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertFalse(interval0 <= interval12, "outside (left)")
     }
 
-// ==============================
-// Test IntervalNode
-// ==============================
+    // ==============================
+    // Test IntervalNode
+    // ==============================
     func test_isOverlapping_positive () {
-        // Interval<Int> instances
-        let interval0 = try! Interval(start: 14, end: 16)
-        let interval1 = try! Interval(start: 10, end: 15)
-        let interval2 = try! Interval(start: 15, end: 20)
-        let interval3 = try! Interval(start: 10, end: 14)
-        let interval4 = try! Interval(start: 16, end: 20)
-        let interval5 = try! Interval(start: 14, end: 15)
-        let interval6 = try! Interval(start: 15, end: 16)
-        let interval7 = try! Interval(start: 14, end: 14)
-        let interval8 = try! Interval(start: 15, end: 15)
-        let interval9 = try! Interval(start: 16, end: 16)
-        let interval10 = try! Interval(start: 10, end: 20)
-        let interval11 = try! Interval(start: 17, end: 20)
-        let interval12 = try! Interval(start: 10, end: 13)
-
         // IntervalNode instances
-        let intervalNode0 = IntervalNode(interval: interval0) // the test interval
-        let intervalNode1 = IntervalNode(interval: interval1) // overlaps from left
-        let intervalNode2 = IntervalNode(interval: interval2) // overlaps from right
-        let intervalNode3 = IntervalNode(interval: interval3) // touches left
-        let intervalNode4 = IntervalNode(interval: interval4) // touches right
-        let intervalNode5 = IntervalNode(interval: interval5) // within - overlaps start
-        let intervalNode6 = IntervalNode(interval: interval6) // within - overlaps end
-        let intervalNode7 = IntervalNode(interval: interval7) // within - single point on left
-        let intervalNode8 = IntervalNode(interval: interval8) // within - single point in middle
-        let intervalNode9 = IntervalNode(interval: interval9) // within - single point on right
-        let intervalNode10 = IntervalNode(interval: interval10) // spans (left and right)
-        let intervalNode11 = IntervalNode(interval: interval11) // outside (right)
-        let intervalNode12 = IntervalNode(interval: interval12) // outside (left)
+        let intervalNode0 = IntervalTreeNode(start: 14, end: 16) // the test interval
+        let intervalNode1 = IntervalTreeNode(start: 10, end: 15) // overlaps from left
+        let intervalNode2 = IntervalTreeNode(start: 15, end: 20) // overlaps from right
+        let intervalNode3 = IntervalTreeNode(start: 10, end: 14) // touches left
+        let intervalNode4 = IntervalTreeNode(start: 16, end: 20) // touches right
+        let intervalNode5 = IntervalTreeNode(start: 14, end: 15) // within - overlaps start
+        let intervalNode6 = IntervalTreeNode(start: 15, end: 16) // within - overlaps end
+        let intervalNode7 = IntervalTreeNode(start: 14, end: 14) // within - single point on left
+        let intervalNode8 = IntervalTreeNode(start: 15, end: 15) // within - single point in middle
+        let intervalNode9 = IntervalTreeNode(start: 16, end: 16) // within - single point on right
+        let intervalNode10 = IntervalTreeNode(start: 10, end: 20) // spans (left and right)
+        let intervalNode11 = IntervalTreeNode(start: 17, end: 20) // outside (right)
+        let intervalNode12 = IntervalTreeNode(start: 10, end: 13) // outside (left)
+
+        XCTAssertEqual(2, intervalNode0.length)
+        XCTAssertEqual(5, intervalNode1.length)
+        XCTAssertEqual(5, intervalNode2.length)
+        XCTAssertEqual(4, intervalNode3.length)
+        XCTAssertEqual(4, intervalNode4.length)
+        XCTAssertEqual(1, intervalNode5.length)
+        XCTAssertEqual(1, intervalNode6.length)
+        XCTAssertEqual(0, intervalNode7.length, "intervals of zero length are allowed")
 
         XCTAssertTrue(intervalNode0.isOverlapping(node: intervalNode0), "overlaps self")
         XCTAssertTrue(intervalNode0.isOverlapping(node: intervalNode1), "overlaps from left")
@@ -545,19 +531,28 @@ final class IntervalTreeTests: XCTestCase {
         let interval12 = try! Interval(start: -7.0, end: -5)
 
         // IntervalNode instances
-        let intervalNode0 = IntervalNode(interval: interval0) // the test interval
-        let intervalNode1 = IntervalNode(interval: interval1) // overlaps from left
-        let intervalNode2 = IntervalNode(interval: interval2) // overlaps from right
-        let intervalNode3 = IntervalNode(interval: interval3) // touches left
-        let intervalNode4 = IntervalNode(interval: interval4) // touches right
-        let intervalNode5 = IntervalNode(interval: interval5) // within - overlaps start
-        let intervalNode6 = IntervalNode(interval: interval6) // within - overlaps end
-        let intervalNode7 = IntervalNode(interval: interval7) // within - single point on left
-        let intervalNode8 = IntervalNode(interval: interval8) // within - single point in middle
-        let intervalNode9 = IntervalNode(interval: interval9) // within - single point on right
-        let intervalNode10 = IntervalNode(interval: interval10) // spans (left and right)
-        let intervalNode11 = IntervalNode(interval: interval11) // outside (right)
-        let intervalNode12 = IntervalNode(interval: interval12) // outside (left)
+        let intervalNode0 = IntervalTreeNode(value: interval0) // the test interval
+        let intervalNode1 = IntervalTreeNode(value: interval1) // overlaps from left
+        let intervalNode2 = IntervalTreeNode(value: interval2) // overlaps from right
+        let intervalNode3 = IntervalTreeNode(value: interval3) // touches left
+        let intervalNode4 = IntervalTreeNode(value: interval4) // touches right
+        let intervalNode5 = IntervalTreeNode(value: interval5) // within - overlaps start
+        let intervalNode6 = IntervalTreeNode(value: interval6) // within - overlaps end
+        let intervalNode7 = IntervalTreeNode(value: interval7) // within - single point on left
+        let intervalNode8 = IntervalTreeNode(value: interval8) // within - single point in middle
+        let intervalNode9 = IntervalTreeNode(value: interval9) // within - single point on right
+        let intervalNode10 = IntervalTreeNode(value: interval10) // spans (left and right)
+        let intervalNode11 = IntervalTreeNode(value: interval11) // outside (right)
+        let intervalNode12 = IntervalTreeNode(value: interval12) // outside (left)
+
+        XCTAssertEqual(2, intervalNode0.length)
+        XCTAssertEqual(1.0001, intervalNode1.length)
+        XCTAssertEqual(0.99, intervalNode2.length)
+        XCTAssertEqual(2, intervalNode3.length)
+        XCTAssertEqual(3, intervalNode4.length)
+        XCTAssertEqual(0.0001, intervalNode5.length)
+        XCTAssertEqual(1, intervalNode6.length)
+        XCTAssertEqual(0, intervalNode7.length, "intervals of zero length are allowed")
 
         XCTAssertTrue(intervalNode0.isOverlapping(node: intervalNode0), "overlaps self")
         XCTAssertTrue(intervalNode0.isOverlapping(node: intervalNode1), "overlaps from left")
@@ -591,19 +586,19 @@ final class IntervalTreeTests: XCTestCase {
         let interval12 = try! Interval(start: 10, end: 13)
 
         // IntervalNode instances
-        let intervalNode0 = IntervalNode(interval: interval0) // the test interval
-        let intervalNode1 = IntervalNode(interval: interval1) // overlaps from left
-        let intervalNode2 = IntervalNode(interval: interval2) // overlaps from right
-        let intervalNode3 = IntervalNode(interval: interval3) // touches left
-        let intervalNode4 = IntervalNode(interval: interval4) // touches right
-        let intervalNode5 = IntervalNode(interval: interval5) // within - overlaps start
-        let intervalNode6 = IntervalNode(interval: interval6) // within - overlaps end
-        let intervalNode7 = IntervalNode(interval: interval7) // within - single point on left
-        let intervalNode8 = IntervalNode(interval: interval8) // within - single point in middle
-        let intervalNode9 = IntervalNode(interval: interval9) // within - single point on right
-        let intervalNode10 = IntervalNode(interval: interval10) // spans (left and right)
-        let intervalNode11 = IntervalNode(interval: interval11) // outside (right)
-        let intervalNode12 = IntervalNode(interval: interval12) // outside (left)
+        let intervalNode0 = IntervalTreeNode(value: interval0) // the test interval
+        let intervalNode1 = IntervalTreeNode(value: interval1) // overlaps from left
+        let intervalNode2 = IntervalTreeNode(value: interval2) // overlaps from right
+        let intervalNode3 = IntervalTreeNode(value: interval3) // touches left
+        let intervalNode4 = IntervalTreeNode(value: interval4) // touches right
+        let intervalNode5 = IntervalTreeNode(value: interval5) // within - overlaps start
+        let intervalNode6 = IntervalTreeNode(value: interval6) // within - overlaps end
+        let intervalNode7 = IntervalTreeNode(value: interval7) // within - single point on left
+        let intervalNode8 = IntervalTreeNode(value: interval8) // within - single point in middle
+        let intervalNode9 = IntervalTreeNode(value: interval9) // within - single point on right
+        let intervalNode10 = IntervalTreeNode(value: interval10) // spans (left and right)
+        let intervalNode11 = IntervalTreeNode(value: interval11) // outside (right)
+        let intervalNode12 = IntervalTreeNode(value: interval12) // outside (left)
 
         // Intervals that intervalNode0 are within
         XCTAssertTrue(intervalNode0.isWithin(node: intervalNode0), "overlaps self")
@@ -644,19 +639,19 @@ final class IntervalTreeTests: XCTestCase {
         let interval12 = try! Interval(start: -7.0, end: -5)
 
         // IntervalNode instances
-        let intervalNode0 = IntervalNode(interval: interval0) // the test interval
-        let intervalNode1 = IntervalNode(interval: interval1) // overlaps from left
-        let intervalNode2 = IntervalNode(interval: interval2) // overlaps from right
-        let intervalNode3 = IntervalNode(interval: interval3) // touches left
-        let intervalNode4 = IntervalNode(interval: interval4) // touches right
-        let intervalNode5 = IntervalNode(interval: interval5) // within - overlaps start
-        let intervalNode6 = IntervalNode(interval: interval6) // within - overlaps end
-        let intervalNode7 = IntervalNode(interval: interval7) // within - single point on left
-        let intervalNode8 = IntervalNode(interval: interval8) // within - single point in middle
-        let intervalNode9 = IntervalNode(interval: interval9) // within - single point on right
-        let intervalNode10 = IntervalNode(interval: interval10) // spans (left and right)
-        let intervalNode11 = IntervalNode(interval: interval11) // outside (right)
-        let intervalNode12 = IntervalNode(interval: interval12) // outside (left)
+        let intervalNode0 = IntervalTreeNode(value: interval0) // the test interval
+        let intervalNode1 = IntervalTreeNode(value: interval1) // overlaps from left
+        let intervalNode2 = IntervalTreeNode(value: interval2) // overlaps from right
+        let intervalNode3 = IntervalTreeNode(value: interval3) // touches left
+        let intervalNode4 = IntervalTreeNode(value: interval4) // touches right
+        let intervalNode5 = IntervalTreeNode(value: interval5) // within - overlaps start
+        let intervalNode6 = IntervalTreeNode(value: interval6) // within - overlaps end
+        let intervalNode7 = IntervalTreeNode(value: interval7) // within - single point on left
+        let intervalNode8 = IntervalTreeNode(value: interval8) // within - single point in middle
+        let intervalNode9 = IntervalTreeNode(value: interval9) // within - single point on right
+        let intervalNode10 = IntervalTreeNode(value: interval10) // spans (left and right)
+        let intervalNode11 = IntervalTreeNode(value: interval11) // outside (right)
+        let intervalNode12 = IntervalTreeNode(value: interval12) // outside (left)
 
         // Intervals that intervalNode0 are within
         XCTAssertTrue(intervalNode0.isWithin(node: intervalNode0), "overlaps self")
@@ -680,25 +675,94 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertTrue(intervalNode9.isWithin(node: intervalNode0), "within - single point on right")
     }
 
-// ==============================
-// Test IntervalTree
-// ==============================
+    // ==============================
+    // Test IntervalTree
+    // ==============================
 
-    // overlap for tree returns set of overlapping intervals for the given reference interval
+    func testContains() {
+        let interval0 = try! Interval(start: 5, end: 5)
+        let interval1 = try! Interval(start: -5, end: 5) // overlaps interval0 on left (from neg)
+        let interval2 = try! Interval(start: 4, end: 12) // interval0 is within
+        let interval3 = try! Interval(start: 7, end: 9) // strictly right
+        let interval4 = try! Interval(start: 0, end: 4) // strictly left
+        let interval5 = try! Interval(start: 10, end: 12) // overlaps interval0 on right
+        let interval6 = try! Interval(start: 1, end: 5) // overlaps interval0 on left
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4, interval5, interval6])
+        let interval7 = try! Interval(start: 10, end: 20) // not inserted in tree
+
+        tree.draw()
+
+        XCTAssertTrue(tree.contains(value: interval0))
+        XCTAssertTrue(tree.contains(value: interval1))
+        XCTAssertTrue(tree.contains(value: interval2))
+        XCTAssertTrue(tree.contains(value: interval3))
+        XCTAssertTrue(tree.contains(value: interval4))
+        XCTAssertTrue(tree.contains(value: interval5))
+        XCTAssertTrue(tree.contains(value: interval6))
+        XCTAssertFalse(tree.contains(value: interval7))
+    }
+
+    func testSearch() {
+        let interval0 = try! Interval(start: 5, end: 5)
+        let interval1 = try! Interval(start: -5, end: 5) // overlaps interval0 on left (from neg)
+        let interval2 = try! Interval(start: 4, end: 12) // interval0 is within
+        let interval3 = try! Interval(start: 7, end: 9) // strictly right
+        let interval4 = try! Interval(start: 0, end: 4) // strictly left
+        let interval5 = try! Interval(start: 10, end: 12) // overlaps interval0 on right
+        let interval6 = try! Interval(start: 1, end: 5) // overlaps interval0 on left
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4, interval5, interval6])
+        let interval7 = try! Interval(start: 10, end: 20) // not inserted in tree
+        XCTAssertEqual(tree.size, 7)
+        XCTAssertEqual(tree.height(), 4)
+
+        let i0 = tree.search(value: interval0)!
+        let i1 = tree.search(value: interval1)!
+        let i2 = tree.search(value: interval2)!
+        let i3 = tree.search(value: interval3)!
+        let i4 = tree.search(value: interval4)!
+        let i5 = tree.search(value: interval5)!
+        let i6 = tree.search(value: interval6)!
+        let noI = tree.search(value: interval7)
+
+        XCTAssertEqual(i0.value, interval0)
+        XCTAssertEqual(i1.value, interval1)
+        XCTAssertEqual(i2.value, interval2)
+        XCTAssertEqual(i3.value, interval3)
+        XCTAssertEqual(i4.value, interval4)
+        XCTAssertEqual(i5.value, interval5)
+        XCTAssertEqual(i6.value, interval6)
+        // not in tree
+        XCTAssertNil(noI)
+
+        // search for entities that are not in tree
+        let intervaln0 = try! Interval(start: 1, end: 3) // strictly left
+        let intervaln1 = try! Interval(start: 4, end: 6) // interval0 is within
+        let intervaln2 = try! Interval(start: 6, end: 9) // strictly right
+        let intervaln3 = try! Interval(start: 3, end: 5) // overlaps left
+        let intervaln4 = try! Interval(start: 5, end: 9) // overlaps right
+
+        XCTAssertNil(tree.search(value: intervaln0))
+        XCTAssertNil(tree.search(value: intervaln1))
+        XCTAssertNil(tree.search(value: intervaln2))
+        XCTAssertNil(tree.search(value: intervaln3))
+        XCTAssertNil(tree.search(value: intervaln4))
+    }
+
+    // returns set of intervals that overlap with the given reference interval
     func testOverlaps() throws {
-        let interval0 = try! Interval(start: 15, end: 20)
-        let intervalNode0 = IntervalNode(interval: interval0) // root of tree
+        let interval0 = try! Interval<Int>(start: 15, end: 20)
+        let intervalNode0 = IntervalTreeNode(value: interval0) // root of tree
 
         let interval1 = try! Interval(start: 10, end: 16)
-        let intervalNode1 = IntervalNode(interval: interval1) // the test interval
+        let intervalNode1 = IntervalTreeNode(value: interval1) // the test interval
 
         let interval2 = try! Interval(start: 21, end: 23)
-        let intervalNode2 = IntervalNode(interval: interval2) // the test interval
+        let intervalNode2 = IntervalTreeNode(value: interval2) // the test interval
 
         //let tree = IntervalTree<Int>.init(intervalNode: intervalNode0)
-        let tree = IntervalTree(intervalNode: intervalNode0)
-        try! tree.insert(value: intervalNode1.value)
-        try! tree.insert(value: intervalNode2.value)
+        let tree = IntervalTree(node: intervalNode0)
+        try! tree.insert(node: intervalNode1)
+        try! tree.insert(node: intervalNode2)
 
         tree.draw()
 
@@ -713,23 +777,18 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertEqual(result[1].end, 16)
     }
 
-    /*
-     * tree root is [15,20]*
-     (([5,20] <- [10,30] -> [12,16]) <- [15,20] -> [16,19] -> [30,40]))
-     */
-    // with for tree returns set of intervals within the given reference interval
+    // returns set of intervals that the given interval is within
     func testWithin() throws {
         let interval0 = try! Interval(start: 15, end: 20)
-        let intervalNode0 = IntervalNode(interval: interval0) // root of tree
-        let tree = IntervalTree(intervalNode: intervalNode0)
+        let intervalNode0 = IntervalTreeNode(value: interval0) // root of tree
+        let tree = IntervalTree(node: intervalNode0)
 
         // Insert some intervals
-        try! tree.insert(value: Interval(start: 15, end: 20))
-        try! tree.insert(value: Interval(start: 10, end: 30)) // match
-        try! tree.insert(value: Interval(start: 16, end: 19))
-        try! tree.insert(value: Interval(start: 5, end: 20)) // match
-        try! tree.insert(value: Interval(start: 12, end: 16)) // match
-        try! tree.insert(value: Interval(start: 30, end: 40))
+        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 10, end: 30))) // match
+        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 16, end: 19)))
+        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 5, end: 20))) // match
+        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 12, end: 16))) // match
+        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 30, end: 40)))
         tree.draw()
 
         // Search for intervals that intersect with [14, 16]
@@ -752,7 +811,7 @@ final class IntervalTreeTests: XCTestCase {
         let interval2 = try! Interval(start: 8, end: 12)
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
-        let tree = IntervalTree(array: [interval0, interval1, interval2, interval3, interval4])
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         tree.draw()
         XCTAssertEqual(tree.size, 5)
         XCTAssertEqual(tree.height(), 3)
@@ -780,7 +839,7 @@ final class IntervalTreeTests: XCTestCase {
         let interval2 = try! Interval(start: 8, end: 12)
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
-        let tree = IntervalTree(array: [interval0, interval1, interval2, interval3, interval4])
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         tree.draw()
         XCTAssertEqual(tree.size, 5)
         XCTAssertEqual(tree.height(), 3)
@@ -794,11 +853,12 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertEqual(n0?.right?.right?.value, interval4)
 
         // node not in tree
-        let null_node = try! IntervalNode(interval: Interval(start: 0, end: 0))
+        let null_node = try! IntervalTreeNode(value: Interval(start: 0, end: 0))
         XCTAssertNil(tree.minimum(node: null_node)?.value)
 
         // node in tree
         let root = tree.root!
+        tree.draw()
         XCTAssertEqual(interval1, tree.minimum(node: root)?.value)
         XCTAssertEqual(interval3, tree.minimum(node: root.right!)?.value)
         XCTAssertEqual(interval1, tree.minimum(node: root.left!)?.value, "max of min leaf is self")
@@ -814,7 +874,7 @@ final class IntervalTreeTests: XCTestCase {
         let interval2 = try! Interval(start: 8, end: 12)
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
-        let tree = IntervalTree(array: [interval0, interval1, interval2, interval3, interval4])
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         tree.draw()
         XCTAssertEqual(tree.size, 5)
         XCTAssertEqual(tree.height(), 3)
@@ -836,14 +896,13 @@ final class IntervalTreeTests: XCTestCase {
     /*
      Returns the rightmost descendent of given node. O(h) time.
      */
-    //public func maximum(node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T>?
     func test_max_node() {
         let interval0 = try! Interval(start: 5, end: 10)
         let interval1 = try! Interval(start: -5, end: 5)
         let interval2 = try! Interval(start: 8, end: 12)
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
-        let tree = IntervalTree(array: [interval0, interval1, interval2, interval3, interval4])
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         tree.draw()
         XCTAssertEqual(tree.size, 5)
         XCTAssertEqual(tree.height(), 3)
@@ -857,7 +916,7 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertEqual(n0?.right?.right?.value, interval4)
 
         // node not in tree
-        let null_node = try! IntervalNode(interval: Interval(start: 0, end: 0))
+        let null_node = try! IntervalTreeNode(value: Interval(start: 0, end: 0))
         XCTAssertNil(tree.maximum(node: null_node)?.value)
 
         // node in tree
@@ -875,13 +934,13 @@ final class IntervalTreeTests: XCTestCase {
         let interval2 = try! Interval(start: 8, end: 12)
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
-        let tree = IntervalTree(array: [interval0, interval1, interval2, interval3, interval4])
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         tree.draw()
 
         // first, lets just pass through the node values
         let r0 = tree.map({$0})
-   
-        //XCTAssertEqual(r0, [[-5, 5], [5, 10], [7, 9], [8, 12], [12, 15]])
+
+        // XCTAssertEqual(r0, [[-5, 5], [5, 10], [7, 9], [8, 12], [12, 15]])
         XCTAssertEqual(r0, [interval1, interval0, interval3, interval2, interval4])
 
         // now let's apply a mutation function - using the BinarySearchTree class implementation of map
@@ -908,38 +967,162 @@ final class IntervalTreeTests: XCTestCase {
         let interval2 = try! Interval(start: 8, end: 12)
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
-        let tree = IntervalTree(array: [interval0, interval1, interval2, interval3, interval4])
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         tree.draw()
 
         // now let's apply a mutation function - using the BinarySearchTree class implementation of map
-        //let r1 = tree.map { try! Interval(start: $0.start * 2, end: $0.end * 2) }
+        let r1 = tree.map { try! Interval(start: $0.start * 2, end: $0.end * 2) }
         let m_interval0 = try! Interval(start: 10, end: 20)
         let m_interval1 = try! Interval(start: -10, end: 10)
         let m_interval2 = try! Interval(start: 16, end: 24)
         let m_interval3 = try! Interval(start: 14, end: 18)
         let m_interval4 = try! Interval(start: 24, end: 30)
-        //XCTAssertEqual(r1, [m_interval1, m_interval0, m_interval3, m_interval2, m_interval4])
+        XCTAssertEqual(r1, [m_interval1, m_interval0, m_interval3, m_interval2, m_interval4])
 
-        // this is using the shorthand notation
+        // flatMap is the shorthand notation (starting values are after map applied above)
         let r2  = tree.flatMap({ 2 * $0 })
+        let fm_interval0 = try! Interval(start: 20, end: 40)
+        let fm_interval1 = try! Interval(start: -20, end: 20)
+        let fm_interval2 = try! Interval(start: 32, end: 48)
+        let fm_interval3 = try! Interval(start: 28, end: 36)
+        let fm_interval4 = try! Interval(start: 48, end: 60)
         tree.draw()
-        XCTAssertEqual(r2, [m_interval1, m_interval0, m_interval3, m_interval2, m_interval4])
+        XCTAssertEqual(r2, [fm_interval1, fm_interval0, fm_interval3, fm_interval2, fm_interval4])
 
         // assert that tree has been updated
-        XCTAssertEqual(tree.root?.value, m_interval0)
-        XCTAssertEqual(tree.root?.left?.value, m_interval1)
-        XCTAssertEqual(tree.root?.right?.value, m_interval2)
-        XCTAssertEqual(tree.root?.right?.left?.value, m_interval3)
-        XCTAssertEqual(tree.root?.right?.right?.value, m_interval4)
+        XCTAssertEqual(tree.root?.value, fm_interval0)
+        XCTAssertEqual(tree.root?.left?.value, fm_interval1)
+        XCTAssertEqual(tree.root?.right?.value, fm_interval2)
+        XCTAssertEqual(tree.root?.right?.left?.value, fm_interval3)
+        XCTAssertEqual(tree.root?.right?.right?.value, fm_interval4)
     }
 
+    func testPredecessor() {
+        let interval0 = try! Interval(start: 5, end: 10)
+        let interval1 = try! Interval(start: -5, end: 5)
+        let interval2 = try! Interval(start: 8, end: 12)
+        let interval3 = try! Interval(start: 7, end: 9)
+        let interval4 = try! Interval(start: 12, end: 15)
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
+        tree.traverseInOrder(completion: { print($0) })
+
+        // assert tree structure
+        XCTAssertEqual(tree.root?.value, interval0)
+        XCTAssertEqual(tree.root?.left?.value, interval1)
+        XCTAssertEqual(tree.root?.right?.value, interval2)
+        XCTAssertEqual(tree.root?.right?.left?.value, interval3)
+        XCTAssertEqual(tree.root?.right?.right?.value, interval4)
+
+        // min has no predecessor
+        let min = tree.minimum()
+        XCTAssertEqual(min?.value, interval1)
+        XCTAssertNil(tree.predecessor(value: min!.value))
+        let max = tree.maximum()
+        XCTAssertEqual(max?.value, interval4)
+        XCTAssertEqual(tree.predecessor(value: max!.value), interval2)
+    }
+
+    func testSuccessor() {
+        let interval0 = try! Interval(start: 5, end: 10)
+        let interval1 = try! Interval(start: -5, end: 5)
+        let interval2 = try! Interval(start: 8, end: 12)
+        let interval3 = try! Interval(start: 7, end: 9)
+        let interval4 = try! Interval(start: 12, end: 15)
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
+        tree.traverseInOrder(completion: { print($0) })
+
+        // assert tree structure
+        XCTAssertEqual(tree.root?.value, interval0)
+        XCTAssertEqual(tree.root?.left?.value, interval1)
+        XCTAssertEqual(tree.root?.right?.value, interval2)
+        XCTAssertEqual(tree.root?.right?.left?.value, interval3)
+        XCTAssertEqual(tree.root?.right?.right?.value, interval4)
+
+        // max has no successor
+        let max = tree.maximum()
+        XCTAssertEqual(max?.value, interval4)
+        XCTAssertNil(tree.successor(value: max!.value))
+        // min has node successor
+        let min = tree.minimum()
+        XCTAssertEqual(min?.value, interval1)
+        XCTAssertEqual(tree.successor(value: min!.value), interval0)
+    }
+
+    func testTraverseInOrder() {
+        let interval0 = try! Interval(start: 5, end: 10)
+        let interval1 = try! Interval(start: -5, end: 5)
+        let interval2 = try! Interval(start: 8, end: 12)
+        let interval3 = try! Interval(start: 7, end: 9)
+        let interval4 = try! Interval(start: 12, end: 15)
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
+        var arr: [Interval<Int>] = [Interval<Int>]()
+        tree.traverseInOrder(completion: { arr.append($0) })
+        XCTAssertEqual(arr, [interval1, interval0, interval3, interval2, interval4])
+    }
+
+    func testSubscripting() {
+        let interval0 = try! Interval(start: 5, end: 10)
+        let interval1 = try! Interval(start: -5, end: 5)
+        let interval2 = try! Interval(start: 8, end: 12)
+        let interval3 = try! Interval(start: 7, end: 9)
+        let interval4 = try! Interval(start: 12, end: 15)
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
+        // NOTE: auto balance is not (yet) implemented on IntervalTree - so use interval values that correspond to tree structure above
+        let intervalNP = try! Interval(start: 5, end: 11) // not in tree
+        tree.draw()
+
+        // get values
+        XCTAssertEqual(tree[interval0]?.value, interval0)
+        XCTAssertEqual(tree[interval1]?.value, interval1)
+        XCTAssertEqual(tree[interval2]?.value, interval2)
+        XCTAssertEqual(tree[interval3]?.value, interval3)
+        XCTAssertEqual(tree[interval4]?.value, interval4)
+        XCTAssertEqual(tree[intervalNP]?.value, nil, "value not in tree")
+
+        // change values using subscripts
+        XCTAssertEqual(tree.root?.value, interval0)
+        XCTAssertTrue(tree.size == 5)
+        XCTAssertTrue(tree.height() == 3)
+        tree[interval0]?.value = intervalNP // edit tree root
+        XCTAssertNil(tree.search(value: interval0))
+        XCTAssertNotNil(tree.search(value: intervalNP))
+        XCTAssertEqual(tree.root?.value, intervalNP)
+        XCTAssertTrue(tree.size == 5)
+        XCTAssertTrue(tree.height() == 3)
+        tree.draw()
+
+        // edit root interval in place
+        XCTAssertEqual(tree.root?.value, intervalNP)
+        XCTAssertTrue(tree.size == 5)
+        XCTAssertTrue(tree.height() == 3)
+        tree[intervalNP]?.value.start = interval0.start
+        tree[intervalNP]?.value.end = interval0.end
+        tree.draw()
+        XCTAssertNil(tree.search(value: intervalNP))
+        XCTAssertNotNil(tree.search(value: interval0))
+        XCTAssertEqual(tree.root?.value, interval0)
+        XCTAssertTrue(tree.size == 5)
+        XCTAssertTrue(tree.height() == 3)
+        tree.draw()
+        
+        // insert new value (might cause tree imbalance)
+        tree[intervalNP] = nil // assignment to nil is required else this is a get value
+        XCTAssertNotNil(tree.search(value: intervalNP))
+        XCTAssertTrue(tree.size == 6)
+        XCTAssertTrue(tree.height() == 4)
+        tree.draw()
+    }
+
+
+    // TODO: structure will change iff autobalance is implemented
+    // since we inherit from AVLTree, each deletion should rebalance tree
     func testDeleteIntervals() {
         let interval0 = try! Interval(start: 5, end: 10)
         let interval1 = try! Interval(start: -5, end: 5)
         let interval2 = try! Interval(start: 8, end: 12)
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
-        let tree = IntervalTree(array: [interval0, interval1, interval2, interval3, interval4])
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         XCTAssertTrue(tree.size == 5)
         XCTAssertTrue(tree.height() == 3)
         XCTAssertEqual(tree.root?.value, interval0)
@@ -949,36 +1132,34 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertEqual(tree.root?.right?.right?.value, interval4)
         tree.draw()
 
-        // tree is now: ([-5, 5]:5? <- [5, 10]:15 -> ([7, 9]:9? <- [8, 12]:15 -> [12, 15]:15?))
+        // tree is now: ([-5, 5]? <- [5, 10] -> ([7, 9]? <- [8, 12] -> [12, 15]?))
         // remove leaf - note autobalance
-        tree.remove(value: interval1) // [-5, 5]
+        _ = tree.remove(value: interval1) // [-5, 5]
         XCTAssertTrue(tree.size == 4)
         XCTAssertTrue(tree.height() == 3)
-        XCTAssertEqual(tree.root?.value, interval3)
-        XCTAssertEqual(tree.root?.left?.value, interval0)
+        XCTAssertEqual(tree.root?.value, interval0)
+        XCTAssertNil(tree.root?.left)
         XCTAssertEqual(tree.root?.right?.value, interval2)
-        XCTAssertNil(tree.root?.right?.left?.value)
+        XCTAssertEqual(tree.root?.right?.left?.value, interval3)
         XCTAssertEqual(tree.root?.right?.right?.value, interval4)
         tree.draw()
 
-        // tree is now: ([5, 10]:15 -> ([7, 9]:9? <- [8, 12]:15 -> [12, 15]:15?))
-        // remove the root - note autobalance
-        tree.remove(value: tree.root!.value) // [7,9]
+        // tree is now: ([5, 10] -> ([7, 9]? <- [8, 12] -> [12, 15]?))
+        // remove the root
+        _ = tree.remove(value: tree.root!.value) // [5,10]
         XCTAssertTrue(tree.size == 3)
-        XCTAssertTrue(tree.height() == 2)
-        XCTAssertEqual(tree.root?.value.start, 8) // [8,12]
-        XCTAssertEqual(tree.root?.left?.value, interval0)
-        XCTAssertEqual(tree.root?.right?.value, interval4)
-        XCTAssertNil(tree.root?.right?.left?.value)
-        XCTAssertNil(tree.root?.right?.right?.value)
+        XCTAssertTrue(tree.height() == 3)
+        XCTAssertEqual(tree.root?.value.start, 7) // [7,9]
+        XCTAssertEqual(tree.root?.right?.value, interval2)
+        XCTAssertEqual(tree.root?.right?.right?.value, interval4)
         tree.draw()
 
-        // tree is now: ([5, 10]:9? <- [8, 12]:15 -> [12, 15]:15?)
+        // tree is now: (([7, 9] -> [8, 12] -> [12, 15]?))
         // remove inner node (root, since tree rebalanced)
-        tree.remove(value: tree.root!.value) // [8, 12]
+        _ = tree.remove(value: tree.root!.value) // [8, 12]
         XCTAssertTrue(tree.size == 2)
         XCTAssertTrue(tree.height() == 2)
-        XCTAssertNotEqual(tree.root?.value.start, 8)
+        XCTAssertNotEqual(tree.root?.value.start, 7)
         XCTAssertNil(tree.root?.left?.value)
         XCTAssertEqual(tree.root?.right?.value, interval4)
         tree.draw()

@@ -2,22 +2,26 @@ import TreeProtocol
 import BinarySearchTree
 
 // TODO: AVLTree should probably use memoized properties on TreeNode for height via updateHeightUpwards()
-open class TreeNode<T: Comparable>: BinarySearchTreeNode<T> {
-    public typealias Node = TreeNode<T>
-    
-    public init(value: T, leftChild: Node?, rightChild: Node?, parent: Node?, height: Int) {
+open class AVLTreeNode<T: TreeValueP>: BinarySearchTreeNode<T> {
+
+    public required init(value: T) {
         super.init(value: value)
-        self.left = leftChild
-        self.right = rightChild
-        self.parent = parent
+        self.value = super.value
     }
-    
-    public convenience override init(value: T) {
-        self.init(value: value, leftChild: nil, rightChild: nil, parent: nil, height: 1)
-    }
-    
-    public override init(node: BinarySearchTreeNode<T>) {
+
+    public required init(node: BinarySearchTreeNode<T>) {
         super.init(node: node)
+        self.value = super.value
+    }
+
+    public var balanceFactor: Int {
+        return (leftHeight - rightHeight)
+    }
+    public var leftHeight: Int {
+      return left?.height ?? -1
+    }
+    public var rightHeight: Int {
+      return right?.height ?? -1
     }
 }
 
@@ -26,9 +30,33 @@ open class TreeNode<T: Comparable>: BinarySearchTreeNode<T> {
 /// AVLTree is a BST that self balances iff the subtrees are more than one level of difference in height.
 /// This implementation of AVLTree is constrained to Numeric types, but the BinarySearchTree that it extends
 /// does not have this constraint.
-open class AVLTree<T: Comparable & Numeric>: BinarySearchTree<T> {
-    public typealias Node = BinarySearchTreeNode<T>
-    
+open class AVLTree<T: TreeValueP>: BinarySearchTree<T> {
+
+    public required init(value: T) {
+        super.init(value: value)
+        self.root = AVLTreeNode<T>(value: value)
+    }
+
+    public required init(node: BinarySearchTreeNode<T>) {
+        super.init(node: node)
+    }
+
+    public required convenience init(array: [T]) {
+        precondition(array.count > 0)
+        self.init(node: AVLTreeNode(value: array.first!))
+        for v in array.dropFirst() {
+            _ = try? insert(node: AVLTreeNode(value: v))
+        }
+    }
+
+    @discardableResult public func insert(node: AVLTreeNode<T>) throws -> AVLTreeNode<T> {
+        try! super.insert(node: node)
+        let parent = node.parent ?? root // parent of replacement node
+        balance(node: parent as? AVLTreeNode<T>)
+        return self.root as! AVLTreeNode<T>
+    }
+
+
     // MARK: - Subscript access
     override public subscript(key: T) -> T? {
         get { return super[key] } // uses super implicitly
@@ -37,37 +65,25 @@ open class AVLTree<T: Comparable & Numeric>: BinarySearchTree<T> {
             balance()
         }
     }
-    
-    // MARK: - Inserting new items
-    @discardableResult override open func insert(value: T) throws -> Self {
-        guard let root = self.root else {
-            return self
-        }
-        do {
-            try super.insert(value: value)
-        } catch {
-            throw TreeError.invalidTree
-        }
-        balance(node: root)
-        return self
-    }
-    
-    
+
     // MARK: - Delete node
-    override public func remove(value: T) -> Self {
-        let parent = search(value: value)?.parent ?? root
-        super.remove(value: value)
-        
-        balance(node: parent)
-        return self
+    @discardableResult open func remove(value: T) -> AVLTreeNode<T>? {
+        if let node = search(value: value) as? AVLTreeNode {
+            try? super.deleteNode(node: node)
+            nodeCount -= 1
+            let parent = node.parent ?? root
+            balance(node: parent as? AVLTreeNode<T>)
+        }
+        return self.root as? AVLTreeNode<T>
     }
 }
 
 
 // MARK: - Balancing tree
 extension AVLTree {
+
     /// Throws TreeError.notBalanced iff the tree is imbalanced
-    public func inOrderCheckBalanced(_ node: Node?) throws {
+    public func inOrderCheckBalanced(_ node: AVLTreeNode<T>?) throws {
         if let node = node {
             guard abs(height(node: node.left) - height(node: node.right)) <= 1 else {
                 throw TreeError.notBalanced
@@ -77,7 +93,7 @@ extension AVLTree {
         }
     }
     
-    fileprivate func updateHeightUpwards(node: Node?) {
+    fileprivate func updateHeightUpwards(node: AVLTreeNode<T>?) {
         //        if let node = node {
         ////            let lHeight = node.left?.height ?? 0
         ////            let rHeight = node.right?.height ?? 0
@@ -88,138 +104,98 @@ extension AVLTree {
         //            updateHeightUpwards(node: node.parent)
         //        }
     }
-    
-    fileprivate func lrDifference(node: Node?) -> Int {
+
+    /// BF(X):=Height(LeftSubtree(X))−Height(RightSubtree(X))
+    fileprivate func lrDifference(node: AVLTreeNode<T>?) -> Int {
         let lHeight = height(node: node?.left)
         let rHeight = height(node: node?.right)
         return lHeight - rHeight
     }
-    
-    internal func balance() {
-        balance(node: self.root)
+
+    private func leftRotate(_ node: AVLTreeNode<T>) -> AVLTreeNode<T> {
+        let pivot: AVLTreeNode = node.right! as! AVLTreeNode<T>
+        node.right = pivot.left
+        pivot.left = node
+        // adjust parents
+        pivot.left?.parent = pivot
+        pivot.right?.parent = pivot
+        pivot.parent = nil
+        // update hights
+        node.height = max(node.leftHeight, node.rightHeight) + 1
+        pivot.height = max(pivot.leftHeight, pivot.rightHeight) + 1
+        return pivot
     }
-    
-    fileprivate func balance(node: Node?) {
-        guard let node = node else {
+
+    private func rightRotate(_ node: AVLTreeNode<T>) -> AVLTreeNode<T> {
+        let pivot: AVLTreeNode = node.left! as! AVLTreeNode<T>
+        node.left = pivot.right
+        pivot.right = node
+        // adjust parents
+        pivot.left?.parent = pivot
+        pivot.right?.parent = pivot
+        pivot.parent = nil
+        // update hights
+        node.height = max(node.leftHeight, node.rightHeight) + 1
+        pivot.height = max(pivot.leftHeight, pivot.rightHeight) + 1
+        return pivot
+    }
+
+    private func rightLeftRotate(_ node: AVLTreeNode<T>) -> AVLTreeNode<T> {
+        guard let rightChild = node.right else {
+           return node
+        }
+        node.right = rightRotate(rightChild as! AVLTreeNode<T>)
+        return leftRotate(node)
+    }
+
+    private func leftRightRotate(_ node: AVLTreeNode<T>) -> AVLTreeNode<T> {
+        guard let leftChild = node.left else {
+          return node
+        }
+        node.left = leftRotate(leftChild as! AVLTreeNode<T>)
+        return rightRotate(node)
+    }
+
+    public func balance() {
+        guard let r = self.root else { return }
+        balance(node: r as? AVLTreeNode<T> )
+    }
+
+    public func balance(node: AVLTreeNode<T>?) {
+        guard let node = node as? AVLTreeNode else {
             return
         }
-        
-        //        updateHeightUpwards(node: node.left)
-        //        updateHeightUpwards(node: node.right)
-        
-        var nodes = [Node?](repeating: nil, count: 3)
-        var subtrees = [Node?](repeating: nil, count: 4)
-        let nodeParent = node.parent
-        
-        let lrFactor = lrDifference(node: root)
-        self.draw()
-        
-        if lrFactor > 1 {
-            // left-left or left-right
-            if lrDifference(node: node.left) > 0 {
-                // LL Rotation
-                nodes[0] = node
-                nodes[2] = node.left
-                nodes[1] = nodes[2]?.left
-                
-                subtrees[0] = nodes[1]?.left
-                subtrees[1] = nodes[1]?.right
-                subtrees[2] = nodes[2]?.right
-                subtrees[3] = nodes[0]?.right
+        var lrDifference = lrDifference(node: node)
+        // normalize for switch cases
+        if lrDifference < -2 { lrDifference = -2 }
+        if lrDifference > 2 { lrDifference = 2 }
+//        if lrDifference > 2 || lrDifference < -2 {
+//            fatalError("!!! balance function is implemented to operate after each insert or remove operation. Cannot balance recursively !!!")
+//        }
+
+        let leftChild = node.left as? AVLTreeNode
+        let rightChild = node.right as? AVLTreeNode
+
+        switch lrDifference {
+        case 2:
+            if let leftChild = node.left as? AVLTreeNode, leftChild.balanceFactor == -1 {
+                print(">>>>>>> LR rotation")
+                self.root = leftRightRotate(node)
             } else {
-                // LR Rotation
-                nodes[0] = node
-                nodes[1] = node.left
-                nodes[2] = nodes[1]?.right
-                
-                subtrees[0] = nodes[1]?.left
-                subtrees[1] = nodes[2]?.left
-                subtrees[2] = nodes[2]?.right
-                subtrees[3] = nodes[0]?.right
+                print(">>>>>>> RR rotation")
+                self.root = rightRotate(node)
             }
-        } else if lrFactor < -1 {
-            // right-left or right-right
-            if lrDifference(node: node.right) < 0 {
-                // RR Rotation
-                nodes[1] = node
-                nodes[2] = node.right
-                nodes[0] = nodes[2]?.right
-                
-                subtrees[0] = nodes[1]?.left
-                subtrees[1] = nodes[2]?.left
-                subtrees[2] = nodes[0]?.left
-                subtrees[3] = nodes[0]?.right
+        case -2:
+            if let rightChild = node.right as? AVLTreeNode, rightChild.balanceFactor == 1 {
+                print(">>>>>>> RL rotation")
+                self.root = rightLeftRotate(node)
             } else {
-                // RL Rotation
-                nodes[1] = node
-                nodes[0] = node.right
-                nodes[2] = nodes[0]?.left
-                
-                subtrees[0] = nodes[1]?.left
-                subtrees[1] = nodes[2]?.left
-                subtrees[2] = nodes[2]?.right
-                subtrees[3] = nodes[0]?.right
+                print(">>>>>>> LL rotation")
+                self.root = leftRotate(node)
             }
-        } else {
-            // Don't need to balance 'node', go for parent
-            balance(node: node.parent)
+        default:
             return
         }
-        
-        // nodes[2] is always the head
-        
-        if node.isRoot {
-            root = nodes[2]
-            root?.parent = nil
-        } else if node.isLeftChild {
-            nodeParent?.left = nodes[2]
-            nodes[2]?.parent = nodeParent
-        } else if node.isRightChild {
-            nodeParent?.right = nodes[2]
-            nodes[2]?.parent = nodeParent
-        }
-        
-        nodes[2]?.left = nodes[1]
-        nodes[1]?.parent = nodes[2]
-        nodes[2]?.right = nodes[0]
-        nodes[0]?.parent = nodes[2]
-        
-        nodes[1]?.left = subtrees[0]
-        subtrees[0]?.parent = nodes[1]
-        nodes[1]?.right = subtrees[1]
-        subtrees[1]?.parent = nodes[1]
-        
-        nodes[0]?.left = subtrees[2]
-        subtrees[2]?.parent = nodes[0]
-        nodes[0]?.right = subtrees[3]
-        subtrees[3]?.parent = nodes[0]
-        
-        //        updateHeightUpwards(node: nodes[1])    // Update height from left
-        //        updateHeightUpwards(node: nodes[0])    // Update height from right
-        
-        balance(node: nodes[2]?.parent)
     }
 }
 
-// MARK: - Displaying tree
-extension AVLTree {
-    public func display(node: Node) {
-        display(node: node, level: 0)
-        print("")
-    }
-    
-    fileprivate func display(node: Node?, level: Int) {
-        if let node = node {
-            display(node: node.right, level: level + 1)
-            print("")
-            if node.isRoot {
-                print("Root -> ", terminator: "")
-            }
-            for _ in 0..<level {
-                print("        ", terminator:  "")
-            }
-            print("(\(node.value):\(height(node: node))", terminator: "")
-            display(node: node.left, level: level + 1)
-        }
-    }
-}

@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "ReferenceBasedBinarySearchTree",targets: ["BinarySearchTree"]),
         .library(name: "ValueBasedBinarySearchTree",targets: ["ValueBasedBinarySearchTree"]),
         .library(name: "IntervalTree", targets: ["IntervalTree"]),
+        .library(name: "TimeIntervalTree", targets: ["TimeIntervalTree"]),
         .library(name: "AVLTree", targets: ["AVLTree"]),
     ],
     dependencies: [
@@ -19,6 +20,13 @@ let package = Package(
 
         // The DocC plugin that allows for GitHub README.md generation:
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
+
+        // DateHelper for Date and Time manipulations
+        .package(url: "https://github.com/melvitax/DateHelper.git", from: "5.0.0"),
+
+        // BigNumber for precision Date difference calcs
+        //.package(url: "https://github.com/mkrd/Swift-BigInt.git", .upToNextMajor(from: "2.2.0"))
+        //.package(url: "https://github.com/mkrd/Swift-BigInt.git", branch: "master")
         
         // Documentation is generated via a shell script called scripts/docAll.sh.
         // NOTE: for now, multi-target doc generation is not supported:
@@ -77,6 +85,12 @@ let package = Package(
         .testTarget(
             name: "IntervalTreeTests",
             dependencies: ["IntervalTree"]),
+        .target(
+            name: "TimeIntervalTree",
+            dependencies: ["IntervalTree"]),
+        .testTarget(
+            name: "TimeIntervalTreeTests",
+            dependencies: ["TimeIntervalTree", "DateHelper"]),
     ]
 )
 
