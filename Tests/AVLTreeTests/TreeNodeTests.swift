@@ -61,42 +61,9 @@ class TreeNodeTests: XCTestCase {
         XCTAssertTrue(type(of: avlNode) == AVLTreeNode<Int>.self)
     }
 
-    func test_initUsingMixedNodeTypes() {
-        let bstNode = BinarySearchTreeNode(value: 3)
-        let avlNode = AVLTreeNode(value: 5)
-
-        // create BST with AVL node
-        let bstTree = BinarySearchTree(node: avlNode) // BST tree using AVL node
-        // create AVL with BST node
-        let avlTree = AVLTree(node: bstNode) // AVL tree using BST node
-
-        // BinarySearchTree inheritance
-        XCTAssertTrue(bstTree is BinarySearchTree)
-        XCTAssertFalse(bstTree is AVLTree)
-        XCTAssertTrue(type(of: bstTree) == BinarySearchTree<Int>.self)
-        XCTAssertFalse(type(of: bstTree) == AVLTree<Int>.self)
-
-        // BinarySearchTreeNode inheritance
-        XCTAssertTrue(bstNode is BinarySearchTreeNode)
-        XCTAssertFalse(bstNode is AVLTreeNode)
-        XCTAssertTrue(type(of: bstNode) == BinarySearchTreeNode<Int>.self)
-        XCTAssertFalse(type(of: bstNode) == AVLTreeNode<Int>.self)
-
-        // AVLTree inheritance
-        XCTAssertTrue(avlTree is BinarySearchTree<Int>)
-        XCTAssertTrue(avlTree is AVLTree)
-        XCTAssertFalse(type(of: avlTree) == BinarySearchTree<Int>.self)
-        XCTAssertTrue(type(of: avlTree) == AVLTree<Int>.self)
-
-        // AVLTreeNode inheritance
-        XCTAssertTrue(avlNode is BinarySearchTreeNode<Int>)
-        XCTAssertTrue(avlNode is AVLTreeNode)
-        XCTAssertFalse(type(of: avlNode) == BinarySearchTreeNode<Int>.self)
-        XCTAssertTrue(type(of: avlNode) == AVLTreeNode<Int>.self)
-    }
-
     func testIsRoot() {
-        XCTAssertTrue(self.root!.isRoot)
+        XCTAssertNotNil(root)
+        XCTAssertTrue(root!.isRoot)
     }
 
     func testNotIsLeaf() {

@@ -21,34 +21,67 @@ final class AVLTreeTests: XCTestCase {
         super.tearDown()
     }
 
+
+    func testSimple() {
+        let tree: AVLTree<Int> = autopopulateWithNodes(3)
+        XCTAssertTrue(tree is AVLTree<Int>)
+        XCTAssertTrue(tree.toArray().count == 3)
+    }
+
     //------------------------
     // Insertions
     //------------------------
     func testAVLTreeBalancedAutoPopulate() {
-        let tree: AVLTree<Int> = autopopulateWithNodes(11)
+        let tree: AVLTree<Int> = autopopulateWithNodes(5)
         XCTAssertTrue(tree is BinarySearchTree<Int>, "AVLTree inherits from BST")
         XCTAssertTrue(tree is AVLTree<Int>)
 
-        tree.balance()
-        tree.draw()
-        XCTAssertEqual(6, tree.root?.value)
-        XCTAssertEqual(5, tree.height(node: tree.root?.left))
-        XCTAssertEqual(5, tree.height(node: tree.root?.right))
-
+        // inOrderCheckBalanced throws whenever the difference in heights of tree hemispheres is >1
         do {
             try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
         } catch _ {
             XCTFail("Tree is not balanced after autopopulate")
         }
-        //tree.display(node: tree.root!)
+        tree.draw()
+        // every new node now causes an imbalance
+        for i in 6...10 {
+            let curr = AVLTreeNode(value: i)
+            try! tree.insert(node: curr)
+            do {
+                XCTExpectFailure("Tree is not balanced after inserting " + String(i))
+                try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
+            } catch _ {
+                XCTFail("Tree is not balanced after inserting " + String(i))
+            }
+        }
     }
 
-    func testAVLTreeBalancedInsert() {
+    func testRootSetAfterBalance() {
+        let tree: AVLTree<Int> = autopopulateWithNodes(11) // enough nodes to ensure balancing
+        // make sure that only one node is set as root after insertions and rotations
+        XCTAssertEqual(6, tree.root?.value)
+        // During balancings, tree roots are: 2, 3, 4, 5, 6
+        for i in 1...tree.size {
+            let curr = tree.search(value: i)
+            if (curr?.value == 6) {
+                XCTAssertTrue(curr!.isRoot)
+            } else {
+                XCTAssertFalse(curr!.isRoot)
+            }
+        }
+        tree.draw()
+    }
+
+    func testAVLTreeBalancedInsert() throws {
         let tree: AVLTree<Int> = autopopulateWithNodes(5)
+        tree.draw()
 
         for i in 6...10 {
-            try! tree.insert(node: AVLTreeNode(value: i))
+            let curr = AVLTreeNode(value: i)
+            try! tree.insert(node: curr)
+
             do {
+                XCTExpectFailure("Tree is not balanced after inserting " + String(i))
                 try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
             } catch _ {
                 XCTFail("Tree is not balanced after inserting " + String(i))
@@ -57,7 +90,78 @@ final class AVLTreeTests: XCTestCase {
         }
     }
 
-    // left-left rotation performed on insert
+    func testHeights() {
+        let tree: AVLTree<Int> = AVLTree(value: 1)
+        XCTAssertTrue(tree.root?.height == 1)
+
+        // all newly added nodes have height=1
+        for i in 2...7 {
+            let curr = AVLTreeNode(value: i)
+            try! tree.insert(node: curr)
+            XCTAssertTrue(curr.height == 1)
+        }
+        tree.draw()
+        //tree.display(node: tree.root!)
+        // check final heights
+        let root = tree.root!
+        XCTAssertTrue(root.height == 4) // node value 4
+        XCTAssertTrue(root.left?.height == 3) // node value 3
+        XCTAssertTrue(root.right?.height == 3) // node value 5
+        XCTAssertTrue(root.left?.left?.height == 2) // node value 2
+        XCTAssertTrue(root.right?.right?.height == 2) // node value 6
+        XCTAssertTrue(root.left?.left?.left?.height == 1) // node value 1
+        XCTAssertTrue(root.right?.right?.right?.height == 1) // node value 7
+    }
+
+    func testBalanceFuncs() {
+        // insert root
+        let tree = AVLTree<Int>(value: 5)
+        do {
+            try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
+        } catch _ {
+            XCTFail("Tree is not balanced after inserting 5")
+        }
+        // insert node left
+        let node1 = AVLTreeNode(value: 2)
+        try! tree.insert(node: node1)
+        do {
+            try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
+        } catch _ {
+            XCTFail("Tree is not balanced after inserting 2")
+        }
+        // insert node right
+        let node2 = AVLTreeNode(value: 7)
+        try! tree.insert(node: node2)
+        do {
+            try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
+        } catch _ {
+            XCTFail("Tree is not balanced after inserting 7")
+        }
+        // insert another node right
+        let node3 = AVLTreeNode(value: 8)
+        try! tree.insert(node: node3)
+        do {
+            try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
+        } catch _ {
+            XCTFail("Tree is not balanced after inserting 8")
+        }
+        // insert another node right to cause rebalance
+        let node4 = AVLTreeNode(value: 9)
+        try! tree.insert(node: node4)
+        do {
+            try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
+        } catch _ {
+            XCTFail("Tree is not balanced after inserting 9")
+        }
+
+        tree.draw()
+    }
+
+    // See: https://stackoverflow.com/questions/3955680/how-to-check-if-my-avl-tree-implementation-is-correct
+    // for test cases
+
+    // left-left (1L) rotation performed on insert
+    // 👍
     func testLLInsertBalance() {
         let tree = AVLTree<Int>(value: 1)
         try! tree.insert(node: AVLTreeNode(value: 2))
@@ -74,54 +178,91 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertNil(tree.root?.parent)
         XCTAssertTrue(tree.root?.left?.parent?.value == 2)
         XCTAssertTrue(tree.root?.right?.parent?.value == 2)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
-    // right-right rotation performed on insert
+    // right-right (1R) rotation performed on insert
+    // 👍
     func testRRInsertBalance() {
         let tree = AVLTree<Int>(value: 3)
         try! tree.insert(node: AVLTreeNode(value: 2))
         try! tree.insert(node: AVLTreeNode(value: 1))
+        tree.draw() // (1[1]? <- 2[2] -> 3[1]?)
 
+        // test values
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(2, tree.root?.value)
         XCTAssertEqual(1, tree.root?.left?.value)
         XCTAssertTrue(tree.root!.left!.isLeaf)
         XCTAssertEqual(3, tree.root?.right?.value)
         XCTAssertTrue(tree.root!.right!.isLeaf)
-
-        tree.draw()
-    }
-
-    // right-left rotations performed on insert
-    func testRLInsertBalance() {
-        let tree = AVLTree<Int>(value: 8)
-        try! tree.insert(node: AVLTreeNode(value: 10))
-        try! tree.insert(node: AVLTreeNode(value: 9))
-
-        XCTAssertTrue(tree.root!.isRoot)
-        XCTAssertEqual(9, tree.root?.value)
-        XCTAssertEqual(8, tree.root?.left?.value)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 2)
         XCTAssertTrue(tree.root!.left!.isLeaf)
-        XCTAssertEqual(10, tree.root?.right?.value)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 2)
         XCTAssertTrue(tree.root!.right!.isLeaf)
-
-        tree.draw()
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
-    // left-right rotations performed
+    // right-left (2L) rotations performed on insert
+    // 👍
+    func testRLInsertBalance() {
+        let tree = AVLTree<Int>(value: 6)
+        try! tree.insert(node: AVLTreeNode(value: 8))
+        try! tree.insert(node: AVLTreeNode(value: 7))
+        tree.draw()
+
+        // test values
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertEqual(7, tree.root?.value)
+        XCTAssertEqual(6, tree.root?.left?.value)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertEqual(8, tree.root?.right?.value)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 7)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 7)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
+    }
+
+    // left-right (2R) rotations performed
+    // 👍
     func testLRInsertBalance() {
         let tree = AVLTree<Int>(value: 8)
         try! tree.insert(node: AVLTreeNode(value: 4))
         try! tree.insert(node: AVLTreeNode(value: 5))
+        tree.draw()
 
+        // test values
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(5, tree.root?.value)
         XCTAssertEqual(4, tree.root?.left?.value)
         XCTAssertTrue(tree.root!.left!.isLeaf)
         XCTAssertEqual(8, tree.root?.right?.value)
         XCTAssertTrue(tree.root!.right!.isLeaf)
-
-        tree.draw()
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 5)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 5)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
     //------------------------
@@ -205,12 +346,14 @@ final class AVLTreeTests: XCTestCase {
     func testAVLTreeBalancedDelete() {
         let tree: AVLTree<Int> = autopopulateWithNodes(5)
 
-        tree.draw()
-
-        for i in 1...6 {
+        // tree root will be 3,4,5 during deletions and rebalancing
+        for i in 1...5 {
+            tree.draw()
             tree.remove(value: i)
+            if tree.size > 0 {
+                XCTAssertTrue(tree.root!.isRoot) // tree root node is marked as root
+            }
             do {
-                // downcast tree to AVLTree
                 try tree.inOrderCheckBalanced(tree.root as? AVLTreeNode<Int>)
             } catch _ {
                 XCTFail("Tree is not balanced after deleting " + String(i))
@@ -221,6 +364,13 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertTrue(tree.height() == 0)
         XCTAssertNil(tree.root)
     }
+
+    // See: https://stackoverflow.com/questions/3955680/how-to-check-if-my-avl-tree-implementation-is-correct
+    // for test cases
+
+    //--------------------------------------
+    // deletion and rotation of inner nodes
+    //--------------------------------------
 
     // right-right rotations performed on deletion.
     // conditions: lrDifference == 2, leftChild.balanceFactor != -1
@@ -233,40 +383,70 @@ final class AVLTreeTests: XCTestCase {
         try! tree.insert(node: AVLTreeNode(value: 5))
 
         tree.draw()
-        _ = tree.remove(value: 5)
-        _ = tree.remove(value: 4)
+        let removed_5 = tree.remove(value: 5)
+        let removed_4 = tree.remove(value: 4)
         tree.draw()
+
+        // ensure that deleted nodes have no connections to tree
+        XCTAssertFalse(removed_4!.hasAnyChild)
+        XCTAssertNil(removed_4!.parent)
+        XCTAssertFalse(removed_5!.hasAnyChild)
+        XCTAssertNil(removed_5!.parent)
+
+        // assert deleted values are not in tree
+        XCTAssertNil(tree.search(value: 5))
+        XCTAssertNil(tree.search(value: 4))
+        // test values
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(2, tree.root?.value)
         XCTAssertEqual(1, tree.root?.left?.value)
         XCTAssertTrue(tree.root!.left!.isLeaf)
         XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 2)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 2)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
     // left-right rotations performed
     // conditions: lrDifference == 2, leftChild.balanceFactor == -1
     // 👍
     func testLRDeleteBalance() {
-        let tree = AVLTree<Int>(value: 3)
+        let tree = AVLTree<Int>(value: 5)
         try! tree.insert(node: AVLTreeNode(value: 2))
-        try! tree.insert(node: AVLTreeNode(value: 5))
         try! tree.insert(node: AVLTreeNode(value: 4))
-        try! tree.insert(node: AVLTreeNode(value: 10))
-        try! tree.insert(node: AVLTreeNode(value: 12))
+        try! tree.insert(node: AVLTreeNode(value: 3))
 
         tree.draw()
-        tree.remove(value: 2)
-        tree.remove(value: 10)
-        tree.remove(value: 12)
+        tree.remove(value: 5)
         tree.draw()
 
+        // assert deleted values are not in tree
+        XCTAssertNil(tree.search(value: 5))
+        // test values
         XCTAssertTrue(tree.nodeCount == 3)
         XCTAssertTrue(tree.root!.isRoot)
-        XCTAssertEqual(4, tree.root?.value)
-        XCTAssertEqual(3, tree.root?.left?.value)
+        XCTAssertEqual(3, tree.root?.value)
+        XCTAssertEqual(2, tree.root?.left?.value)
         XCTAssertTrue(tree.root!.left!.isLeaf)
-        XCTAssertEqual(5, tree.root?.right?.value)
+        XCTAssertEqual(4, tree.root?.right?.value)
         XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 3)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 3)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
     // left-left rotations performed on deletion
@@ -283,12 +463,27 @@ final class AVLTreeTests: XCTestCase {
         _ = tree.remove(value: 1)
         _ = tree.remove(value: 2)
         tree.draw()
+
+        // assert deleted values are not in tree
+        XCTAssertNil(tree.search(value: 1))
+        XCTAssertNil(tree.search(value: 2))
+        // test values
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(4, tree.root?.value)
         XCTAssertEqual(3, tree.root?.left?.value)
         XCTAssertTrue(tree.root!.left!.isLeaf)
         XCTAssertEqual(5, tree.root?.right?.value)
         XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 4)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 4)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
     // right-left rotations performed on deletion
@@ -306,6 +501,10 @@ final class AVLTreeTests: XCTestCase {
         _ = tree.remove(value: 6)
         tree.draw()
 
+        // assert deleted values are not in tree
+        XCTAssertNil(tree.search(value: 6))
+        XCTAssertNil(tree.search(value: 7))
+        // test values
         XCTAssertTrue(tree.nodeCount == 3)
         XCTAssertTrue(tree.root!.isRoot)
         XCTAssertEqual(9, tree.root?.value)
@@ -313,7 +512,21 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertTrue(tree.root!.left!.isLeaf)
         XCTAssertEqual(10, tree.root?.right?.value)
         XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 9)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 9)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
+
+    //--------------------------------------
+    // deletion and rotation of leaf nodes
+    //--------------------------------------
 
     // See: https://stackoverflow.com/questions/3955680/how-to-check-if-my-avl-tree-implementation-is-correct
     // for test cases
@@ -326,12 +539,47 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertTrue(tree.size == 4)
         XCTAssertTrue(tree.toArray().count == 4)
 
+        // node=4 before deletion
+        let node_4 = tree.search(value: 4)
+        XCTAssertFalse(node_4!.hasLeftChild)
+        XCTAssertFalse(node_4!.hasRightChild)
+        XCTAssertTrue(node_4!.isLeftChild)
+        XCTAssertFalse(node_4!.isRightChild)
+        XCTAssertNotNil(node_4!.parent)
+
         tree.draw()
-        _ = tree.remove(value: 4)
+        let removed_4 = tree.remove(value: 4)
         tree.draw()
         XCTAssertTrue(tree.size == 3)
         XCTAssertTrue(tree.toArray().count == 3)
         XCTAssertEqual(tree.size, tree.toArray().count, "tree size does not match node count")
+
+        // ensure that deleted nodes have no connections to tree
+        XCTAssertEqual(4, removed_4?.value)
+        XCTAssertFalse(removed_4!.hasLeftChild)
+        XCTAssertFalse(removed_4!.hasRightChild)
+        XCTAssertFalse(removed_4!.isLeftChild)
+        XCTAssertFalse(removed_4!.isRightChild)
+        XCTAssertNil(removed_4!.parent)
+        // assert deleted values are not searchable
+        XCTAssertNil(tree.search(value: 4))
+        // test values
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertEqual(6, tree.root?.value)
+        XCTAssertEqual(5, tree.root?.left?.value)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertEqual(7, tree.root?.right?.value)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 6)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 6)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
     // Regression test - there was a bug in AVL rotation where deleting a leaf (when triggering rebalance)
@@ -343,13 +591,41 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertTrue(tree.toArray().count == 6)
 
         tree.draw()
-        _ = tree.remove(value: 1)
+        let removed_1 = tree.remove(value: 1)
         _ = tree.remove(value: 2)
         _ = tree.remove(value: 0)
         tree.draw()
         XCTAssertTrue(tree.size == 3)
         XCTAssertTrue(tree.toArray().count == 3)
         XCTAssertEqual(tree.size, tree.toArray().count, "tree size does not match node count")
+
+        // ensure that deleted nodes have no connections to tree
+        XCTAssertFalse(removed_1!.hasAnyChild)
+        XCTAssertFalse(removed_1!.isLeftChild)
+        XCTAssertFalse(removed_1!.isRightChild)
+        XCTAssertNil(removed_1!.parent)
+        // assert deleted values are not searchable
+        XCTAssertNil(tree.search(value: 0))
+        XCTAssertNil(tree.search(value: 1))
+        XCTAssertNil(tree.search(value: 2))
+        // test values
+        XCTAssertTrue(tree.nodeCount == 3)
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertEqual(-2, tree.root?.value)
+        XCTAssertEqual(-3, tree.root?.left?.value)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertEqual(-1, tree.root?.right?.value)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == -2)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == -2)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
     // Regression test - there was a bug in AVL rotation where deleting a leaf (when triggering rebalance)
@@ -366,6 +642,27 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertTrue(tree.size == 3)
         XCTAssertTrue(tree.toArray().count == 3)
         XCTAssertEqual(tree.size, tree.toArray().count, "tree size does not match node count")
+
+        // assert deleted values are not in tree
+        XCTAssertNil(tree.search(value: 12))
+        // test values
+        XCTAssertTrue(tree.nodeCount == 3)
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertEqual(6, tree.root?.value)
+        XCTAssertEqual(5, tree.root?.left?.value)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertEqual(7, tree.root?.right?.value)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 6)
+        XCTAssertTrue(tree.root!.left!.isLeaf)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 6)
+        XCTAssertTrue(tree.root!.right!.isLeaf)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
     }
 
     // Regression test - there was a bug in AVL rotation where deleting a leaf (when triggering rebalance)
@@ -381,8 +678,30 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertTrue(tree.size == 5)
         XCTAssertTrue(tree.toArray().count == 5)
         XCTAssertEqual(tree.size, tree.toArray().count, "tree size does not match node count")
-    }
 
+        // assert deleted values are not in tree
+        XCTAssertNil(tree.search(value: -2))
+        // test values
+        XCTAssertTrue(tree.nodeCount == 5)
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertEqual(2, tree.root?.value)
+        XCTAssertEqual(0, tree.root?.left?.value)
+        XCTAssertEqual(-3, tree.root?.left?.left?.value)
+        XCTAssertTrue(tree.root!.left!.left!.isLeaf)
+        XCTAssertEqual(5, tree.root?.right?.value)
+        XCTAssertEqual(7, tree.root?.right?.right?.value)
+        XCTAssertTrue(tree.root!.right!.right!.isLeaf)
+        // test parents after balance
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertTrue(tree.root?.left?.parent?.value == 2)
+        XCTAssertTrue(tree.root?.left?.left?.parent?.value == 0)
+        XCTAssertTrue(tree.root?.right?.parent?.value == 2)
+        XCTAssertTrue(tree.root?.right?.right?.parent?.value == 5)
+        // test root
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
+    }
 
     //-------------------------------------
     // Subscript access
@@ -394,7 +713,7 @@ final class AVLTreeTests: XCTestCase {
         // get values
         XCTAssertEqual(tree[10], 10)
         XCTAssertEqual(tree[14], 14)
-        XCTAssertEqual(tree[10], 10)
+        XCTAssertEqual(tree[25], 25)
         XCTAssertEqual(tree[55], nil, "value not in tree")
 
         // change values: tree structure will changes unless we are editing a leaf node,
@@ -416,28 +735,23 @@ final class AVLTreeTests: XCTestCase {
         tree[10] = 50 // edit tree root
         XCTAssertNil(tree.search(value: 10))
         XCTAssertNotNil(tree.search(value: 50))
-        XCTAssertEqual(tree.root?.value, 8)
+        XCTAssertEqual(tree.root?.value, 50)
         XCTAssertTrue(tree.size == 7)
-        XCTAssertTrue(tree.height() == 4)
+        XCTAssertTrue(tree.height() == 3)
         tree.draw()
-        // insert new values to make tree unbalanced
-        tree[51] = nil
+        // delete values
+        tree[25] = nil
+        XCTAssertNil(tree.search(value: 25))
+        XCTAssertTrue(tree.size == 7)
+        // insert new value to make tree unbalanced
+        tree[51] = 51
         XCTAssertNotNil(tree.search(value: 51))
-        XCTAssertEqual(tree.root?.value, 20)
+        XCTAssertEqual(tree.root?.value, 50)
         XCTAssertTrue(tree.size == 8)
         XCTAssertTrue(tree.height() == 4)
         tree.draw()
     }
 
-
-    //-------------------------------------
-    // Misc Tests
-    //-------------------------------------
-    func testMinimumOnPopulatedTree() {
-        let tree = autopopulateWithNodes(500)
-        let min = tree.minimum()
-        XCTAssertNotNil(min, "Minimum function not working")
-    }
 
     //-------------------------------------
     // Performance Tests

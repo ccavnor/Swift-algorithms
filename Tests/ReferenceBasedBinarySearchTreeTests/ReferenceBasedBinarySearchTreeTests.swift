@@ -22,6 +22,32 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
 
     // test isRoot and isLeaf
     func test_isRoot_isLeaf() {
+        // empty tree has no root
+        let tree0 = BinarySearchTree(value: 1)
+        // cannot just create an empty tree since init routines require root node or value
+        tree0.remove(value: 1)
+        XCTAssertNil(tree0.root)
+        XCTAssertNil(tree0.root?.isRoot)
+
+        // assemble a tree manually where insertions have no parent
+        let invalidTree0 = BinarySearchTree(value: 3)
+        invalidTree0.root?.left = BinarySearchTreeNode(value: 1)
+        invalidTree0.root?.left?.right = BinarySearchTreeNode(value: 2)
+        invalidTree0.root?.right = BinarySearchTreeNode(value: 5)
+        invalidTree0.root?.right?.left = BinarySearchTreeNode(value: 4)
+        // all parents are nil
+        XCTAssertNil(invalidTree0.root!.parent)
+        XCTAssertNil(invalidTree0.root!.left!.parent)
+        XCTAssertNil(invalidTree0.root!.left!.right!.parent)
+        XCTAssertNil(invalidTree0.root!.right!.parent)
+        XCTAssertNil(invalidTree0.root!.right!.left!.parent)
+        // only initial node can be root
+        XCTAssertTrue(invalidTree0.root!.isRoot)
+        XCTAssertFalse(invalidTree0.root!.left!.isRoot)
+        XCTAssertFalse(invalidTree0.root!.left!.right!.isRoot)
+        XCTAssertFalse(invalidTree0.root!.right!.isRoot)
+        XCTAssertFalse(invalidTree0.root!.right!.left!.isRoot)
+
         let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
         tree.draw()
 
@@ -181,6 +207,7 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
 
         // root
         let root = tree.root!
+        XCTAssertTrue(root.isRoot)
         XCTAssertEqual(root.value, 8)
 
         // left subtree
@@ -231,6 +258,13 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         let n9 = tree.search(value: 9)!
         let n6 = tree.search(value: 6)!
         let n16 = tree.search(value: 16)!
+
+        // root and leafs
+        XCTAssertTrue(n8.isRoot)
+        XCTAssertTrue(n3.isLeaf)
+        XCTAssertTrue(n6.isLeaf)
+        XCTAssertTrue(n9.isLeaf)
+        XCTAssertTrue(n16.isLeaf)
 
         // min and max
         XCTAssertEqual(tree.minimum()?.value, 3)
@@ -373,6 +407,7 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
 
     // test if value is in left or right subtree of root
     func testTreeLeftRightChild() {
+        // root node is 8 (in meither left or right subtrees)
         // nodes 3,5,6 are left of root
         // nodes 9,10,12,16 are right of root
         let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
@@ -397,6 +432,10 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertTrue(tree.inRightTree(value: 12))
         XCTAssertFalse(tree.inLeftTree(value: 16))
         XCTAssertTrue(tree.inRightTree(value: 16))
+
+        // values not in tree
+        XCTAssertFalse(tree.inLeftTree(value: 1))
+        XCTAssertFalse(tree.inRightTree(value: 100))
     }
 
     // test isRoot, isLeftChild, isRightChild
@@ -448,6 +487,7 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertTrue(tree.root?.value == 3)
         let n0 = tree.search(value: 3)
         XCTAssertEqual(n0?.value, 3)
+        XCTAssertTrue(n0!.isRoot)
 
         // left
         let n1 = tree.search(value: 1)
@@ -592,6 +632,47 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertEqual(tree.maximum(node: rrrr)?.value, 26, "max value of leaf is leaf value")
     }
 
+    // NOTE: this test provides only printed output that must be inspected by some lowly human.
+    func testDrawParents() {
+        let tree = BinarySearchTree(array: [3, 1, 2, 5, 4])
+        tree.draw() // ((1 -> 2?) <- 3 -> (4? <- 5))
+        // validate node relations
+        XCTAssertEqual(3, tree.root?.value)
+        XCTAssertEqual(1, tree.root?.left?.value)
+        XCTAssertEqual(2, tree.root?.left?.right?.value)
+        XCTAssertEqual(5, tree.root?.right?.value)
+        XCTAssertEqual(4, tree.root?.right?.left?.value)
+        // validate parent relations
+        XCTAssertEqual(nil, tree.root?.parent?.value)
+        XCTAssertEqual(3, tree.root?.left?.parent?.value)
+        XCTAssertEqual(1, tree.root?.left?.right?.parent?.value)
+        XCTAssertEqual(3, tree.root?.right?.parent?.value)
+        XCTAssertEqual(5, tree.root?.right?.left?.parent?.value)
+        tree.drawParents() // ((1^3 <- 2^1?) -> 3^x <- (4^5? -> 5^3))
+
+        // contruct tree without parent pointers.
+        let invalidTree0 = BinarySearchTree(value: 3)
+        invalidTree0.root?.left = BinarySearchTreeNode(value: 1)
+        invalidTree0.root?.left?.right = BinarySearchTreeNode(value: 2)
+        invalidTree0.root?.right = BinarySearchTreeNode(value: 5)
+        invalidTree0.root?.right?.left = BinarySearchTreeNode(value: 4)
+        // output should be: ((1 -> 2?) <- 3 -> (4? <- 5))
+        invalidTree0.draw()
+        // validate node relations
+        XCTAssertEqual(3, invalidTree0.root?.value)
+        XCTAssertEqual(1, invalidTree0.root?.left?.value)
+        XCTAssertEqual(2, invalidTree0.root?.left?.right?.value)
+        XCTAssertEqual(5, invalidTree0.root?.right?.value)
+        XCTAssertEqual(4, invalidTree0.root?.right?.left?.value)
+        // validate parent relations
+        XCTAssertEqual(nil, invalidTree0.root?.parent?.value)
+        XCTAssertNil(invalidTree0.root?.left?.parent)
+        XCTAssertNil(invalidTree0.root?.left?.right?.parent)
+        XCTAssertNil(invalidTree0.root?.right?.parent)
+        XCTAssertNil(invalidTree0.root?.right?.left?.parent)
+        // output should be: ((1^❌ <- 2^❌?) -> 3^x <- (4^❌? -> 5^❌))
+        invalidTree0.drawParents()
+    }
 
     // map takes function: (BinarySearchTree) -> BinarySearchTree) and returns [BinarySearchTreeNode<T>]
     func testMap() {
@@ -647,6 +728,36 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         var postOrder = [Int]()
         tree.traversePostOrder { postOrder.append($0) }
         XCTAssertEqual(postOrder, [4,6,5,10,13,12,8])
+    }
+
+    // NOTE that removal of a node really occurs by swapping values of a node with its replacement node
+    // and returning the SAME node, but with new values. This maintains referential integrity for external
+    // pointers to the tree (and therefor its root).
+    func testRemoveRoot() {
+        let tree = BinarySearchTree(array: [8, 5, 10, 4])
+        let root = tree.root
+        XCTAssertEqual(8, root?.value, "tree root has value 8")
+        XCTAssertTrue(root!.isRoot)
+
+        // remove root using tree.remove(value:)
+        tree.draw() // ((4? <- 5) <- 8 -> 10?)
+        let removed = tree.remove(value: 8)
+        tree.draw() // (4? <- 5 -> 10?)
+        XCTAssertEqual(5, removed?.value, "tree.remove(value:) returns replacement node")
+        XCTAssertNil(tree.search(value: 8), "removed node is no longer searchable")
+        XCTAssertEqual(5, root?.value, "pointer to tree root now has value 5")
+        XCTAssertTrue(tree.search(value: 5)!.isRoot, "searched node now has value 5 and isRoot")
+
+        // now remove root again using tree.deleteNode(node:)
+        let root1 = tree.root!
+        XCTAssertEqual(5, root1.value, "tree root has value 5")
+        let removed1 = try! tree.deleteNode(node: root1)
+        tree.draw() // (4 -> 10?)
+
+        XCTAssertEqual(4, removed1?.value, "tree.deleteNode(node:) returns replacement node")
+        XCTAssertNil(tree.search(value: 5), "removed node is no longer searchable")
+        XCTAssertEqual(4, root?.value, "pointer to tree root now has value 5")
+        XCTAssertTrue(tree.search(value: 4)!.isRoot, "searched node now has value 5 and isRoot")
     }
 
     func testRemoveLeaf() {
@@ -811,6 +922,50 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertNil(tree.root)
     }
 
+    // Regression test: removal of tree root is causing an empty tree under this node configuration
+    func testRemove_regression() {
+        let int0 = 5
+        let int1 = 8
+        let int2 = 7
+        let int3 = 12
+
+        // manually set up tree structure
+        let node1 = BinarySearchTreeNode(value: int1) // root=8
+        let node0 = BinarySearchTreeNode(value: int0) // 5
+        node0.parent = node1
+        let node2 = BinarySearchTreeNode(value: int2) // 7
+        node2.parent = node0
+        let node3 = BinarySearchTreeNode(value: int3) // 12
+        node3.parent = node1
+
+        let tree = BinarySearchTree(node: node1)
+        // validate
+        XCTAssertTrue(node1.isRoot)
+        XCTAssertFalse(node0.isRoot)
+        XCTAssertFalse(node2.isRoot)
+        XCTAssertFalse(node3.isRoot)
+        tree.root?.left = node0
+        tree.root?.left?.right = node2
+        tree.root?.right = node3
+        // need to manually set nodeCount since we bypassed init
+        tree.nodeCount = 4
+        XCTAssertEqual(4, tree.nodeCount)
+        tree.draw() // ((5 -> 7?) <- 8* -> 12?)
+
+        // REMOVE root (8)
+        _ = tree.remove(value: tree.root!.value) // 8
+        tree.draw() // (5? <- 7* -> 12?)
+        // validate
+        XCTAssertNotNil(tree.root)
+        XCTAssertEqual(7, tree.root?.value)
+        XCTAssertEqual(5, tree.root?.left?.value)
+        XCTAssertEqual(12, tree.root?.right?.value)
+
+        XCTAssertTrue(tree.root!.isRoot)
+        XCTAssertFalse(tree.root!.left!.isRoot)
+        XCTAssertFalse(tree.root!.right!.isRoot)
+    }
+
     func testPredecessor() {
         let tree = BinarySearchTree(array: [10,5,20,3,8,14,25,1,4,6,9,12,15,23,26])
         tree.draw()
@@ -875,15 +1030,14 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         // get values
         XCTAssertEqual(tree[10], 10)
         XCTAssertEqual(tree[14], 14)
-        XCTAssertEqual(tree[10], 10)
+        XCTAssertEqual(tree[25], 25)
         XCTAssertEqual(tree[55], nil, "value not in tree")
-
         // change values: tree structure will changes unless we are editing a leaf node,
         // the BST is valid but BST does not auto-balance
         XCTAssertEqual(tree.root?.value, 10)
         XCTAssertTrue(tree.size == 7)
         XCTAssertTrue(tree.height() == 3)
-        tree[3] = 4 // edit tree root
+        tree[3] = 4 // replace tree root
         XCTAssertNil(tree.search(value: 3))
         XCTAssertNotNil(tree.search(value: 4))
         XCTAssertEqual(tree.root?.value, 10)
@@ -894,19 +1048,23 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertEqual(tree.root?.value, 10)
         XCTAssertTrue(tree.size == 7)
         XCTAssertTrue(tree.height() == 3)
-        tree[10] = 50 // edit tree root
+        tree[10] = 11 // replace tree root
         XCTAssertNil(tree.search(value: 10))
-        XCTAssertNotNil(tree.search(value: 50))
-        XCTAssertEqual(tree.root?.value, 8)
+        XCTAssertNotNil(tree.search(value: 11))
+        XCTAssertEqual(tree.root?.value, 11)
         XCTAssertTrue(tree.size == 7)
-        XCTAssertTrue(tree.height() == 4)
+        XCTAssertTrue(tree.height() == 3)
         tree.draw()
-        // insert new values to make tree unbalanced
-        tree[51] = nil
+        // delete values
+        tree[25] = nil
+        XCTAssertNil(tree.search(value: 25))
+        XCTAssertTrue(tree.size == 6)
+        // insert new value to make tree unbalanced
+        tree[51] = 51
         XCTAssertNotNil(tree.search(value: 51))
-        XCTAssertEqual(tree.root?.value, 8)
-        XCTAssertTrue(tree.size == 8)
-        XCTAssertTrue(tree.height() == 5)
+        XCTAssertEqual(tree.root?.value, 11)
+        XCTAssertTrue(tree.size == 7)
+        XCTAssertTrue(tree.height() == 3)
         tree.draw()
     }
 }

@@ -13,5 +13,6 @@ See individual target documents in this package via the following links:
 - [Protocols for Binary Search Tree and descendents](https://ccavnor.github.io/Swift-algorithms/documentation/treeprotocol/)
 - [Binary Search Tree](https://ccavnor.github.io/Swift-algorithms/documentation/binarysearchtree/)
 - [Self balancing AVL Tree](https://ccavnor.github.io/Swift-algorithms/documentation/avltree/)
-- [An AVLTree that handles intervals as values](https://ccavnor.github.io/Swift-algorithms/documentation/intervaltree/)
+- [Interval Tree - a self balancing BST that uses Intervals as values](https://ccavnor.github.io/Swift-algorithms/documentation/intervaltree/)
+- [Time Interval Tree - an Interval Tree that uses Date valued intervals](https://ccavnor.github.io/Swift-algorithms/documentation/timeintervaltree/)
 

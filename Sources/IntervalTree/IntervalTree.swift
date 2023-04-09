@@ -9,29 +9,27 @@ import TreeProtocol
 import BinarySearchTree
 import AVLTree
 
-// TODO: override BST search to use maxEnd instead of equality checks?
-// TODO: provide search for value (within range) of an interval and return IntervalNode
-
 // MARK: - IntervalNode
 open class IntervalTreeNode<T: IntervalTreeValueP>: AVLTreeNode<Interval<T>> where T: Comparable {
-    open var maxEnd: T
+    public var maxEnd: T
 
-    required public init(node: BinarySearchTreeNode<Interval<T>>) {
-        let v = node.value
-        self.maxEnd = v.end
+    public init(node: IntervalTreeNode<T>) {
+        self.maxEnd = node.value.end
         super.init(node: node)
-        self.value = v
+        assert(height == 1)
+        assert(self.value == node.value)
     }
 
-    public required convenience init(start: T, end: T) {
-        let i: Interval<T> = try! Interval(start: start, end: end)
-        self.init(value: i)
-    }
-
-    // T is Interval<T>
-    public required init(value: Interval<T>) {
+    required public init(value: Interval<T>) {
         self.maxEnd = value.end
         super.init(value: value)
+        assert(height == 1)
+        assert(self.value == value)
+    }
+
+    public convenience init(start: T, end: T) {
+        let i: Interval<T> = try! Interval(start: start, end: end)
+        self.init(value: i)
     }
 
     /// Returns true iff self's interval is overlaps with the given interval. False otherwise.
@@ -71,7 +69,7 @@ open class IntervalTreeNode<T: IntervalTreeValueP>: AVLTreeNode<Interval<T>> whe
     }
 
     /// Length of the interval - returns float to unsure accuracy of decimal intervals
-    open override var length: Float {
+    open var length: Float {
         return f(self.value.end - self.value.start)
     }
 }
@@ -90,61 +88,30 @@ extension IntervalTreeNode: CustomDebugStringConvertible {
 
 /// IntervalTree is a AVLTree (therefore a BST) that uses Interval objects as nodes. IntervalTree is constrained to Numeric types,
 /// as operations such as length make little sense outside of numerical values.
-
-
-// TODO: put AVLTree func in extension for use here
 open class IntervalTree<T: IntervalTreeValueP>: AVLTree<Interval<T>> {
 
-    public required init(node: BinarySearchTreeNode<Interval<T>>) {
+    public init(node: IntervalTreeNode<T>) {
         super.init(node: node)
-        self.root = node
-        nodeCount = 1
+        assert(nodeCount == 1)
+        assert(root!.isRoot)
     }
 
-    public required init(value: Interval<T>) {
+    required public init(value: Interval<T>) {
         super.init(value: value)
-        let node = IntervalTreeNode<T>(value: value)
-        root = node
-        nodeCount = 1
+        assert(nodeCount == 1)
+        assert(root!.isRoot)
     }
 
-    public required convenience init(array: [Interval<T>]) {
+    public convenience init(array: [Interval<T>]) {
         precondition(array.count > 0)
         self.init(node: IntervalTreeNode(value: array.first!))
         for v in array.dropFirst() {
             _ = try? insert(node: IntervalTreeNode(value: v))
         }
-    }
-
-    public required convenience init(array: [T]) {
-        precondition(array.count > 0)
-        self.init(node: IntervalTreeNode(value: array.first! as! Interval<T>))
-        for v in array.dropFirst() {
-            _ = try? insert(node: IntervalTreeNode(value: v as! Interval<T>))
+        if !balance() {
+            updateHeightUpwards(node: minimum() as? IntervalTreeNode<T>)
+            updateHeightUpwards(node: maximum() as? IntervalTreeNode<T>)
         }
-    }
-
-    /// return an array of node values from an in-order traversal
-    public override func toArray() -> [Interval<T>] {
-        var inOrder = [Interval<T>]()
-        traverseInOrder { inOrder.append($0) }
-        return inOrder
-    }
-
-    public override func height() -> Int {
-        guard let root = self.root else {
-            return 0
-        }
-        return height(node: root)
-    }
-
-    public func height(node: IntervalTreeNode<T>?) -> Int {
-        guard let node = node, let _ = self.root else {
-            return 0
-        }
-        let lHeight = height(node: node.left as? IntervalTreeNode<T>)
-        let rHeight = height(node: node.right as? IntervalTreeNode<T>)
-        return max(lHeight, rHeight) + 1
     }
 
     /// Custom collection accessor for [] notation
@@ -158,6 +125,9 @@ open class IntervalTree<T: IntervalTreeValueP>: AVLTree<Interval<T>> {
                 _ = try? insert(node: IntervalTreeNode<T>(value: replace.value))
             } else { // insert new node (value)
                 _ = try? insert(node: IntervalTreeNode(value: key))
+            }
+            if !balance() {
+                updateHeightUpwards(node: newValue)
             }
         }
     }
@@ -236,19 +206,27 @@ open class IntervalTree<T: IntervalTreeValueP>: AVLTree<Interval<T>> {
             }
         }
     }
-    
+
     // MARK: - Adding items
-    /// Inserts a new element into the tree. You should randomly insert elements at the root, to make to sure this remains a valid
-    /// binary tree! Duplicate values are ignored, but this incurs a lookup penalty.
-    /// Performance: runs in O(h) time, where h is the height of the tree.
-    @discardableResult public func insert(node: IntervalTreeNode<T>) throws -> IntervalTreeNode<T> {
+    /// Inserts a new element into the tree. Duplicate values are ignored, but this incurs a lookup penalty of O(h).
+    /// Performance: runs in O(h) time, where h is the height of the tree, plus O(log(n)) time for balancing.
+    @discardableResult open func insert(node: IntervalTreeNode<T>) throws -> IntervalTreeNode<T> {
         // in case root is not set
-        guard let root = self.root as? IntervalTreeNode<T> else {
+        guard var root = self.root as? IntervalTreeNode<T> else {
             throw TreeError.invalidTree
         }
-        let parent = node.parent ?? root // parent of replacement node
-        balance(node: parent as? IntervalTreeNode<T>)
 
+        // TODO: reimplement contains as a hash for constant time lookup
+        // used to prevent duplicate values being inserted into tree
+        if self.contains(value: node.value) {
+            return node
+        }
+        // balance iff unbalanced
+        if !balance() {
+            updateHeightUpwards(node: node)
+        }
+        // balance might change root
+        root = self.root as! IntervalTreeNode<T>
         return insert(tree: root, node: node, parent: nil)
     }
 
@@ -257,8 +235,8 @@ open class IntervalTree<T: IntervalTreeValueP>: AVLTree<Interval<T>> {
                                            parent: IntervalTreeNode<T>?) -> IntervalTreeNode<T> {
         let parent = parent ?? root as? IntervalTreeNode<T>
 
-        // insertion is based on start value of interval
-        if node.value.start < tree.value.start {
+        // insertion is based on Comparable imple. See TreeProtocol.
+        if node.value < tree.value {
             if let left = tree.left as? IntervalTreeNode<T> {
                 insert(tree: left,
                        node: node,
@@ -281,91 +259,19 @@ open class IntervalTree<T: IntervalTreeValueP>: AVLTree<Interval<T>> {
                 nodeCount += 1
             }
         }
-
         // update maxEnd
         node.maxEnd = max(node.maxEnd, tree.value.end)
         return tree
-    }
-
-    // MARK: - Deleting items
-    /// Deletes a node from the tree.
-    /// Performance: runs in O(h) time, where h is the height of the tree.
-    @discardableResult public override func remove(value: Interval<T>) -> IntervalTreeNode<T>? {
-        guard let replace = search(value: value) else {
-            return nil
-        }
-        if nodeCount == 1 {
-            root = nil
-            nodeCount = 0
-        } else {
-            do {
-                try deleteNode(node: replace)
-                nodeCount -= 1
-            } catch {
-                // not a fatal error - node might not exist
-                print("!!! unable to remove node \(replace.value)")
-                return nil
-            }
-        }
-        return replace
-    }
-
-    public func deleteNode(node: IntervalTreeNode<T>) throws {
-        if node.isLeaf {
-            // Just remove and balance up
-            if let parent = node.parent {
-                guard node.isLeftChild || node.isRightChild else {
-                    throw TreeError.invalidTree
-                }
-
-                if node.isLeftChild {
-                    parent.left = nil
-                } else if node.isRightChild {
-                    parent.right = nil
-                }
-            } else {
-                // at root
-                root = nil
-            }
-        } else {
-            // Handle stem cases
-            if let left = node.left {
-                // replace with max valued node from left tree
-                if let replacement = maximum(node: left) {
-                    // give the deleted node its replacement's value
-                    node.value = replacement.value
-                    // then delete the replacement
-                    try? deleteNode(node: replacement)
-                }
-                // replace with min valued node from right tree
-            } else if let right = node.right as? IntervalTreeNode<T> {
-                if let replacement = minimum(node: right), replacement !== node {
-                    // give the deleted node its replacement's value
-                    node.value = replacement.value
-                    // then delete the replacement
-                    try? deleteNode(node: replacement)
-                }
-            }
-        }
-    }
-
-    open override func draw() {
-        guard let root = self.root else {
-            print("* tree is empty *")
-            return
-        }
-        print("\n") // newline
-        print("<<< tree root is \(root.value), size=\(size), height=\(height(node: root)): leaf nodes are marked with ? >>>")
-        draw(root as? IntervalTreeNode<T>)
-        print("\n") // newline
     }
 
     public override func contains(value: Interval<T>) -> Bool {
         return search(value: value) != nil
     }
 
-    /// Since insertion is based on start value of the interval, so too will search look at start value
-    open func search(value: Interval<T>) -> IntervalTreeNode<T>? {
+    // MARK: - Searching
+    /// Finds the "highest" (in tree) node with the specified value.
+    /// Performance: runs in O(h) time, where h is the height of the tree.
+    open override func search(value: Interval<T>) -> IntervalTreeNode<T>? {
         guard let root = self.root as? IntervalTreeNode<T> else {
             return nil
         }
@@ -374,17 +280,19 @@ open class IntervalTree<T: IntervalTreeValueP>: AVLTree<Interval<T>> {
             return root
         }
         while let n = node {
-            if value.start == n.value.start && value.end == n.value.end {
+            if value == n.value {
                 return n
             }
-            if value.start < n.value.start {
+            // using Comparable impl for Interval
+            if value < n.value {
                 node = n.left as? IntervalTreeNode<T>
-            } else if value.start >= n.value.start {
+            } else if value >= n.value {
                 node = n.right as? IntervalTreeNode<T>
             } else {
                 return n
             }
         }
+        // if here - value not found in tree
         return node
     }
     
@@ -413,49 +321,9 @@ open class IntervalTree<T: IntervalTreeValueP>: AVLTree<Interval<T>> {
     }
 }
 
-
-extension IntervalTree {
-    private func draw(_ node: IntervalTreeNode<T>?) {
-        if let left = node?.left as? IntervalTreeNode<T> {
-            print("(", terminator: ""); draw(left); print(" <- ", terminator:"");
-        }
-
-        if let node = node {
-            // differ in placement of parenthetical groupings
-            if node.hasBothChildren { print("\(node.value):\(node.maxEnd)", terminator:"")  }
-            else if node.hasLeftChild { print("\(node.value):\(node.maxEnd)", terminator:")") }
-            else if node.hasRightChild { print("(\(node.value):\(node.maxEnd)", terminator:"") }
-            else { print("\(node.value):\(node.maxEnd)", terminator:"?") } // leaf
-        }
-
-        if let right = node?.right as? IntervalTreeNode<T> {
-            print(" -> ", terminator:""); draw(right); print("", terminator: ")")
-        }
+// MARK: Extension: Interval
+extension Interval: CustomStringConvertible {
+    public var description: String {
+        return "{\(start), \(end)}"
     }
 }
-
-// MARK: - Displaying tree
-extension IntervalTree {
-    public func display(node: IntervalTreeNode<T>) {
-        print("\nDisplaying [node]: level in tree")
-        print("---------------------------------------")
-        display(node: node, level: 0)
-        print("\n")
-    }
-
-    fileprivate func display(node: IntervalTreeNode<T>?, level: Int) {
-        if let node = node {
-            display(node: node.right as? IntervalTreeNode<T>, level: level + 1)
-            print("")
-            if node.isRoot {
-                print("Root -> ", terminator: "")
-            }
-            for _ in 0..<level {
-                print("        ", terminator:  "")
-            }
-            print("\(node.value):\(height(node: node))", terminator: "")
-            display(node: node.left as? IntervalTreeNode<T>, level: level + 1)
-        }
-    }
-}
-

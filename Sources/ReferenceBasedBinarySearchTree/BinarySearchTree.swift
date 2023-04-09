@@ -1,34 +1,56 @@
 import TreeProtocol
 
-
-// TODO: insertion by type is forcing me to type convert for many operations, since insert is owned by
-// BinarySearchTree, any values inserted are assumed to be of its type. By inserting nodes - the types
-// will never be in question.
-
 open class BinarySearchTreeNode<T: TreeValueP>: TreeNodeP where T: Comparable {
-    public var value: T
-    public var left: BinarySearchTreeNode<T>?
-    public var right: BinarySearchTreeNode<T>?
-    public var parent: BinarySearchTreeNode<T>?
+    public typealias NodeType = BinarySearchTreeNode<T>
+    public typealias NodeValue = T
 
-    public var height = 0
+    private var _left: BinarySearchTreeNode<T>?
+    private var _right: BinarySearchTreeNode<T>?
+    private var _parent: BinarySearchTreeNode<T>?
 
-    public required init(value: T) {
-        self.value = value
+    open var left: BinarySearchTreeNode<T>? {
+        get { return _left }
+        set { _left = newValue }
+    }
+    open var right: BinarySearchTreeNode<T>? {
+        get { return _right }
+        set { _right = newValue }
+    }
+    open var parent: BinarySearchTreeNode<T>? {
+        get { return _parent }
+        set { _parent = newValue }
     }
 
-    public required init(node: BinarySearchTreeNode<T>) {
-        self.value = node.value
+    private var _value: T
+    private var _is_root = false // toggled by tree for root node
+    private var _height = 0
+
+    open var value: T {
+        get { return _value }
+        set { _value = newValue }
+    }
+    open var height: Int {
+        get { return _height }
+        set { _height = newValue }
     }
 
-    open var length: Float {
-        return 0
+    required public init(value: T) {
+        _value = value
+        _height = 1
     }
 
+    public init(node: BinarySearchTreeNode<T>) {
+        _value = node.value
+        _height = 1
+    }
+
+    /// Set by tree for primary node only. Insert, Delete, and balancing routines are responsible for toggling this
     public var isRoot: Bool {
-        return parent == nil
+        get { return _is_root }
+        set { _is_root = newValue }
     }
 
+    /// Returns true iff node is a leaf node
     public var isLeaf: Bool {
         return left == nil && right == nil
     }
@@ -43,21 +65,31 @@ open class BinarySearchTreeNode<T: TreeValueP>: TreeNodeP where T: Comparable {
         return parent?.right === self
     }
 
+    /// Returns true iff node has a left child
     public var hasLeftChild: Bool {
         return left != nil
     }
 
+    /// Returns true iff node has a right child
     public var hasRightChild: Bool {
         return right != nil
     }
 
+    /// Returns true if node has any children
     public var hasAnyChild: Bool {
         return hasLeftChild || hasRightChild
     }
 
+    /// Returns true if node has both children
     public var hasBothChildren: Bool {
         return hasLeftChild && hasRightChild
     }
+
+    /// Calculates the height of the left subtree.
+    public var leftHeight: Int { return left?.height ?? -1 }
+
+    /// Calculates the height of the right subtree.
+    public var rightHeight: Int { return right?.height ?? -1 }
 
     // For Comparable conformance
     public static func == (lhs: BinarySearchTreeNode<T>, rhs: BinarySearchTreeNode<T>) -> Bool {
@@ -76,20 +108,27 @@ open class BinarySearchTreeNode<T: TreeValueP>: TreeNodeP where T: Comparable {
 /// randomized order, not in sorted order.
 //open class BinarySearchTree<T: AdditiveArithmetic & Comparable>: TreeProtocol {
 open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
-    public var root: BinarySearchTreeNode<T>?
+    private var _root: BinarySearchTreeNode<T>?
     public var nodeCount: Int = 0
 
-    public required init(value: T) {
-        self.root = BinarySearchTreeNode<T>(value: value)
+    open var root: BinarySearchTreeNode<T>? {
+        get { return _root }
+        set { _root = newValue }
+    }
+
+    required public init(value: T) {
+        _root = BinarySearchTreeNode<T>(value: value)
+        _root?.isRoot = true
         nodeCount += 1
     }
 
-    public required init(node: BinarySearchTreeNode<T>) {
-        self.root = node
+    public init(node: some BinarySearchTreeNode<T>) {
+        _root = node
+        _root?.isRoot = true
         nodeCount += 1
     }
 
-    required public convenience init(array: [T]) {
+    public convenience init(array: [T]) {
         precondition(array.count > 0)
         self.init(value: array.first!)
         for v in array.dropFirst() {
@@ -98,18 +137,24 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
     }
 
     // MARK: - Subscript access
-
-    /// Custom collection accessor for [] notation
+    /// Custom collection accessor for [] notation.
+    /// To find out if a value is present in tree, use tree[value] - value will be returned if it exists.
+    /// To replace an existing value, use tree[existing_value] = new_value.
+    /// To remove a key from the tree, use tree[value] = nil.
+    /// To add a new value to the tree, assign the value to itself: tree[value] = value.
     open subscript(key: T) -> T? {
         get { return search(value: key)?.value }
-        // subscript doesn't support throws as of now, so swallow the error
         set(newValue) {
-            // if replacing a node (value)
+            // if given a value
             if let replace = newValue {
+                // replace value with given
+                if let node: BinarySearchTreeNode<T> = search(value: key) {
+                    node.value = replace
+                } else if key == replace {
+                    try! self.insert(node: BinarySearchTreeNode<T>(value: key))
+                }
+            } else { // else we delete node
                 remove(value: key)
-                _ = try? insert(node: NodeType(value: replace))
-            } else { // insert new node (value)
-                _ = try? insert(node: NodeType(value: key))
             }
         }
     }
@@ -136,6 +181,8 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         return height(node: root)
     }
 
+    /// Calculates the height of a given node in tree. There is a dynamic cost to using this function
+    /// over the height property of nodes, but the latter are only guaranteed to be accurate after balancing in AVL trees.
     public func height(node: BinarySearchTreeNode<T>?) -> Int {
         guard let node = node, let _ = self.root else {
             return 0
@@ -150,7 +197,17 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         // in case root is not set
         guard let root = self.root else { return false }
         // root is in neither subtree
-        if value < root.value { return true }
+        var node = root.left
+        while let n = node {
+            if value < n.value {
+                node = n.left
+            } else if value > n.value {
+                node = n.right
+            }
+            if node?.value == value {
+                return true
+            }
+        }
         return false
     }
 
@@ -159,10 +216,21 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         // in case root is not set
         guard let root = self.root else { return false }
         // root is in neither subtree
-        if value > root.value { return true }
+        var node = root.right
+        while let n = node {
+            if value < n.value {
+                node = n.left
+            } else if value > n.value {
+                node = n.right
+            }
+            if node?.value == value {
+                return true
+            }
+        }
         return false
     }
 
+    /// Check if tree contains value. Runs in search time.
     open func contains(value: T) -> Bool {
         return search(value: value) != nil
     }
@@ -179,8 +247,6 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
     /// Returns the leftmost descendent of given node. O(h) time.
     open func minimum(node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T>? {
         var n = node
-        // TODO: contains check only adds time complexity?
-        if !self.contains(value: n.value) { return nil }
         while let next = n.left {
             n = next
         }
@@ -199,8 +265,6 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
     /// Returns the rightmost descendent of given node. O(h) time.
     public func maximum(node: BinarySearchTreeNode<T>) -> BinarySearchTreeNode<T>? {
         var n = node
-        // TODO: contains check only adds time complexity?
-        if !self.contains(value: n.value) { return nil }
         while let next = n.right {
             n = next
         }
@@ -301,8 +365,149 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         if let right = node.right { map(node: right, apply: apply, result: &result) }
     }
 
+    // MARK: - Searching
+    /// Finds the "highest" (in tree) node with the specified value.
+    /// Performance: runs in O(h) time, where h is the height of the tree.
+    open func search(value: T) ->  BinarySearchTreeNode<T>? {
+        guard let root = self.root else {
+            return nil
+        }
+        var node: BinarySearchTreeNode<T>? = root
+        if root.value == value {
+            return root
+        }
+        while let n = node {
+            if value < n.value {
+                node = n.left
+            } else if value > n.value {
+                node = n.right
+            } else {
+                return n
+            }
+        }
+        return node
+    }
 
-    /// Draw the tree as a flattened structure. The implementation is in an extension so that derived classes can provide their own implementations.
+    // MARK: - Adding items
+    /// Inserts a new element into the tree. You should randomly insert elements at the root, to make to sure this remains a valid
+    /// binary tree! Duplicate values are ignored, but this incurs a lookup penalty.
+    /// Performance: runs in O(h) time, where h is the height of the tree.
+    @discardableResult open func insert(node: BinarySearchTreeNode<T>) throws -> BinarySearchTreeNode<T> {
+        // in case root is not set
+        guard let root = self.root else {
+            throw TreeError.invalidTree
+        }
+        // TODO: reimplement contains as a hash for constant time lookup
+        // used to prevent duplicate values being inserted into tree
+        if self.contains(value: node.value) {
+            return node
+        }
+        return insert(tree: root, node: node, parent: nil)
+    }
+
+    @discardableResult private func insert(tree: BinarySearchTreeNode<T>,
+                                          node: BinarySearchTreeNode<T>,
+                                          parent: BinarySearchTreeNode<T>?) -> BinarySearchTreeNode<T> {
+        var insertionNode = node
+        let parent = parent ?? root
+        let nodeType = type(of: node)
+
+        if node.value < tree.value {
+            if let left = tree.left {
+                insert(tree: left,
+                       node: node,
+                       parent: left)
+            } else {
+                let temp = nodeType.init(value: node.value)
+                //let temp = BinarySearchTreeNode(value: node.value)
+                tree.left = temp
+                temp.parent = parent
+                insertionNode = temp
+                nodeCount += 1
+            }
+        } else {
+            if let right = tree.right {
+                insert(tree: right,
+                       node: node,
+                       parent: right)
+            } else {
+                let temp = nodeType.init(value: node.value)
+                //let temp = BinarySearchTreeNode(value: node.value)
+                tree.right = temp
+                temp.parent = parent
+                insertionNode = temp
+                nodeCount += 1
+            }
+        }
+        return insertionNode
+    }
+
+    // MARK: - Deleting items
+    /// Deletes a node from the tree and returns its replacement, if any.
+    /// Performance: runs in O(h) time, where h is the height of the tree.
+    @discardableResult open func remove(value: T) -> BinarySearchTreeNode<T>? {
+        guard var replace = search(value: value) else {
+            return nil
+        }
+        if nodeCount == 1 {
+            root = nil
+            nodeCount = 0
+        } else {
+            replace = try! deleteNode(node: replace)!
+            nodeCount -= 1
+        }
+        return replace
+    }
+
+    /// Deletes the given node and returns its replacement, if any
+    public func deleteNode(node: BinarySearchTreeNode<T>) throws -> BinarySearchTreeNode<T>? {
+        if node.isLeaf {
+            // Just remove node and set parent pointer to nil
+            if let parent = node.parent {
+                guard node.isLeftChild || node.isRightChild else {
+                    throw TreeError.invalidTree
+                }
+                if node.isLeftChild {
+                    parent.left = nil
+                } else if node.isRightChild {
+                    parent.right = nil
+                }
+                // remove all connections to tree so that memory can be reclaimed
+                node.parent = nil
+                node.left = nil
+                node.right = nil
+            } else { // must be root
+                root = nil
+            }
+        } else {
+            // Handle stem cases
+            if let left = node.left {
+                // replace with max valued node from left tree
+                if let replacement = maximum(node: left) {
+                    // give the deleted node its replacement's value
+                    node.value = replacement.value
+                    // then delete the replacement or fail
+                    _ = try deleteNode(node: replacement)
+                }
+                // replace with min valued node from right tree
+            } else if let right = node.right {
+                if let replacement = minimum(node: right), replacement !== node {
+                    // give the deleted node its replacement's value
+                    node.value = replacement.value
+                    // then delete the replacement or fail
+                    _ = try deleteNode(node: replacement)
+                }
+                // deletion will throw by now iff not successful
+
+            } else {
+                throw TreeError.invalidTree
+            }
+        }
+        // return replacement node (same node, but values have changed - this allows external references to root to remain valid)
+        return node
+    }
+
+    /// Draw the tree as a flattened structure of node children. The implementation is in an extension so that derived classes can provide their own implementations.
     open func draw() {
         guard let root = self.root else {
             print("* tree is empty *")
@@ -312,10 +517,27 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         print("\n") // newline
         let report =
         """
-        <<< tree[\(treeType)] root is \(root.value), size=\(size), height=\(height(node: root)), lheight=\(self.height(node: root.left)), rheight=\(self.height(node: root.right)): leaf nodes are marked with ? >>>
+        <<< tree[\(treeType)] root is \(root.value), size=\(size), height=\(height(node: root)), lheight=\(height(node: root.left)), rheight=\(height(node: root.right)): leaf nodes are followed by ?, root node is followed by * >>>
         """
         print(report)
         draw(root)
+        print("\n") // newline
+    }
+
+    /// Draw the tree as a flattened structure of node parents. The implementation is in an extension so that derived classes can provide their own implementations.
+    open func drawParents() {
+        guard let root = self.root else {
+            print("* tree is empty *")
+            return
+        }
+        let treeType = type(of: self)
+        print("\n") // newline
+        let report =
+        """
+        <<< tree[\(treeType)] root is \(root.value), size=\(size), height=\(height(node: root)), leaf nodes are marked with ?. Parents of nodes are indicated with "^" followed by the node's parent value or "x" if node is root of tree. Any nodes with invalid parents are marked with an "❌">>>
+        """
+        print(report)
+        drawParents(of:root)
         print("\n") // newline
     }
 }
@@ -335,12 +557,44 @@ extension BinarySearchTree: CustomStringConvertible {
         else if node.hasLeftChild { print("\(node.value)", terminator:")") }
         else if node.hasRightChild { print("(\(node.value)", terminator:"") }
         else { print("\(node.value)", terminator:"?") } // leaf
+        if node.isRoot { print("*", terminator:"")}
 
         if let right = node.right { print(" -> ", terminator:""); draw(right); print("", terminator: ")") }
     }
 
+    private func drawParents(of node: BinarySearchTreeNode<T>?) {
+        guard let node = node else {
+            return
+        }
+        if let left = node.left { print("(", terminator: ""); drawParents(of: left); print(" -> ", terminator:""); }
+
+        if let parent = node.parent {
+            let entry = "\(node.value)^\(parent.value)"
+            if node.hasBothChildren { print(entry, terminator:"")  }
+            else if node.hasLeftChild { print(entry, terminator:")") }
+            else if node.hasRightChild { print("(\(entry)", terminator:"") }
+            else { print(entry, terminator:"?") } // leaf
+        } else if node.isRoot {
+                print("\(node.value)^x", terminator:"")
+        } else {
+            let entry = "\(node.value)^❌"
+            if node.hasBothChildren { print(entry, terminator:"")  }
+            else if node.hasLeftChild { print(entry, terminator:")") }
+            else if node.hasRightChild { print("(\(entry)", terminator:"") }
+            else { print(entry, terminator:"?") } // leaf
+        }
+
+        if let right = node.right { print(" <- ", terminator:""); drawParents(of: right); print("", terminator: ")") }
+    }
+
     // MARK: - Displaying tree
+
+    /// Display the tree in graphical fashion
     public func display(node: BinarySearchTreeNode<T>) {
+        guard let _ = root else {
+            print("* tree is empty *")
+            return
+        }
         print("\nDisplaying [node]: level in tree")
         print("---------------------------------------")
         display(node: node, level: 0)
@@ -357,7 +611,17 @@ extension BinarySearchTree: CustomStringConvertible {
             for _ in 0..<level {
                 print("        ", terminator:  "")
             }
-            print("\(node.value):\(height(node: node))", terminator: "")
+            if node.isRoot {
+                print("\(node.value):\(height(node: node))", terminator: "")
+            } else {
+                if node < node.parent! {
+                    //print("\(node.value) < \(node.parent?.value)")
+                    print("\(node.value):\(height(node: node))", terminator: " L")
+                } else {
+                    //print("\(node.value) > \(node.parent?.value)")
+                    print("\(node.value):\(height(node: node))", terminator: " R")
+                }
+            }
             display(node: node.left, level: level + 1)
         }
     }

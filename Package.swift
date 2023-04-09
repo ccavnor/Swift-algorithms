@@ -18,17 +18,16 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
 
-        // The DocC plugin that allows for GitHub README.md generation:
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
-
         // DateHelper for Date and Time manipulations
         .package(url: "https://github.com/melvitax/DateHelper.git", from: "5.0.0"),
 
         // BigNumber for precision Date difference calcs
         //.package(url: "https://github.com/mkrd/Swift-BigInt.git", .upToNextMajor(from: "2.2.0"))
         //.package(url: "https://github.com/mkrd/Swift-BigInt.git", branch: "master")
-        
-        // Documentation is generated via a shell script called scripts/docAll.sh.
+
+        // The DocC plugin that allows for GitHub README.md generation:
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
+
         // NOTE: for now, multi-target doc generation is not supported:
         //    https://github.com/apple/swift-docc/issues/255
         // But I provided a shell script called scripts/docAll.sh that will build each target

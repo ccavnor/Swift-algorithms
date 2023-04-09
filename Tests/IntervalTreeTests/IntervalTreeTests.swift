@@ -3,7 +3,6 @@ import TreeProtocol
 @testable import IntervalTree
 
 // TODO: check that maxEnd is being updated with insertions and deletions
-// TODO: check that IntervalTree is constrained to numeric types - unlike BST: (maybe using T: IEquatable<T>)
 final class IntervalTreeTests: XCTestCase {
     override func setUp() {
         super.setUp()
@@ -16,6 +15,85 @@ final class IntervalTreeTests: XCTestCase {
     // ==============================
     // Test Interval
     // ==============================
+    func testIntervalCompare() {
+        let interval0 = try! Interval(start: 5, end: 10)
+        let interval1 = try! Interval(start: -5, end: 5) // a.end == b.start
+        let interval2 = try! Interval(start: 6, end: 12) // spans interval0
+        let interval3 = try! Interval(start: 7, end: 9) // within interval0
+        let interval4 = try! Interval(start: 5, end: 15) // a.start == b.start but b.end > a.end (should be to right of interval0)
+
+        // true when a.start > b.start or a.start == b.start and a.end > b.end
+        XCTAssertFalse(interval0 > interval0)
+        XCTAssertTrue(interval0 > interval1)
+        XCTAssertFalse(interval0 > interval2)
+        XCTAssertFalse(interval0 > interval3)
+        XCTAssertFalse(interval0 > interval4)
+
+        // true when a.start > b.start or a.start == b.start but a.end > b.end or a == b
+        XCTAssertTrue(interval0 >= interval0)
+        XCTAssertTrue(interval0 >= interval1)
+        XCTAssertFalse(interval0 >= interval2)
+        XCTAssertFalse(interval0 >= interval3)
+        XCTAssertFalse(interval0 >= interval4)
+
+        // true when a.start < b.start or a.start == b.start and a.end < b.end
+        XCTAssertFalse(interval0 < interval0)
+        XCTAssertFalse(interval0 < interval1)
+        XCTAssertTrue(interval0 < interval2)
+        XCTAssertTrue(interval0 < interval3)
+        XCTAssertTrue(interval0 < interval4)
+
+        // true when a.start < b.start or a.start == b.start but a.end < b.end or a == b
+        XCTAssertTrue(interval0 <= interval0)
+        XCTAssertFalse(interval0 <= interval1)
+        XCTAssertTrue(interval0 <= interval2)
+        XCTAssertTrue(interval0 <= interval3)
+        XCTAssertTrue(interval0 <= interval4)
+
+        // true when a.start == b.start and a.end == b.end
+        XCTAssertTrue(interval0 == interval0)
+        XCTAssertFalse(interval0 == interval1)
+        XCTAssertFalse(interval0 == interval2)
+        XCTAssertFalse(interval0 == interval3)
+        XCTAssertFalse(interval0 == interval4)
+
+        // true when a.start != b.start or a.end != b.end
+        XCTAssertFalse(interval0 != interval0)
+        XCTAssertTrue(interval0 != interval1)
+        XCTAssertTrue(interval0 != interval2)
+        XCTAssertTrue(interval0 != interval3)
+        XCTAssertTrue(interval0 != interval4)
+    }
+
+    func testIntervalAdditiveArithmetic() {
+        let interval0 = try! Interval(start: 5, end: 10)
+        let interval1 = try! Interval(start: -5, end: 5)
+        let interval2 = try! Interval(start: 0, end: 0)
+        let interval3 = try! Interval(start: -5, end: 0)
+        let interval4 = try! Interval(start: 0, end: 5)
+        let interval5 = try! Interval(start: -15, end: -5)
+
+        // test identity
+        XCTAssertEqual(interval2, interval2 + interval2)
+        XCTAssertEqual(interval2, interval2 - interval2)
+        // test addition
+        var result = try? Interval(start: 0, end: 15)
+        XCTAssertEqual(result, (interval0 + interval1))
+        result = try? Interval(start: -5, end: 5)
+        XCTAssertEqual(result, (interval3 + interval4))
+        XCTAssertEqual(interval1 + interval2, interval2 + interval1, "commutativity of addition")
+        
+        // test subtraction
+        result = try? Interval(start: 5, end: 5)
+        XCTAssertEqual(result, (interval0 - interval4))
+        XCTAssertNotEqual(result, (interval4 - interval1), "subtraction is not commutative")
+        result = try? Interval(start: 10, end: 10)
+        XCTAssertEqual(result, (interval1 - interval5)) // {-5, 5} - {-15, -5}
+        // cannot create interval where end < start
+        XCTAssertEqual(interval2, (interval0 - interval1),
+                       "intervals can only exist if end > start. Erroneous operations receive Interval {0,0}")
+    }
+
     func test_Interval_init() {
         let point = try? Interval(start: 1, end: 1)
         XCTAssertEqual(1, point?.start)
@@ -76,7 +154,7 @@ final class IntervalTreeTests: XCTestCase {
         let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         tree.draw()
         XCTAssertEqual(tree.size, 5)
-        XCTAssertEqual(tree.height(), 4)
+        XCTAssertEqual(tree.height(), 3)
 
         let i0 = tree.search(value: interval0)!
         XCTAssertEqual(i0.value.start, 5)
@@ -93,6 +171,89 @@ final class IntervalTreeTests: XCTestCase {
         let i4 = tree.search(value: interval4)!
         XCTAssertEqual(i4.value.start, 12)
         XCTAssertEqual(i4.value.end, 15)
+    }
+
+    //----------------------------
+    // Interval Comparables
+    //----------------------------
+    // Interval comparable rules:
+    // ==: intervals begin and end at same values
+    // !=: intervals strictly do not overlap
+    // lt: true when a.start < b.start or a.start == b.start and a.end < b.end
+    // lte: true when a.start < b.start or a.start == b.start but a.end < b.end or a == b
+    // gt: true when a.start > b.start or a.start == b.start and a.end > b.end
+    // gte: true when a.start > b.start or a.start == b.start but a.end > b.end or a == b
+
+
+    // intervals that have a common start must be positioned in tree based on their end points (ie. interval length)
+    func testOrderingOfIntervalsWithCommonStart() {
+        let interval0 = try! Interval(start: 5, end: 10)
+        let interval1 = try! Interval(start: 5, end: 5)
+        let interval2 = try! Interval(start: 5, end: 6)
+        let interval3 = try! Interval(start: -5, end: 5)
+        let interval4 = try! Interval(start: 0, end: 6)
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
+        tree.display(node: tree.root!)
+
+        // equivalent to nodes in tree but not from tree
+        let iNode0 = IntervalTreeNode(value: interval0)
+        let iNode1 = IntervalTreeNode(value: interval1)
+        let iNode2 = IntervalTreeNode(value: interval2)
+        let iNode3 = IntervalTreeNode(value: interval3)
+        let iNode4 = IntervalTreeNode(value: interval4)
+
+        // check lengths
+        XCTAssertEqual(5, iNode0.length)
+        XCTAssertEqual(0, iNode1.length)
+        XCTAssertEqual(1, iNode2.length)
+        XCTAssertEqual(10, iNode3.length)
+        XCTAssertEqual(6, iNode4.length)
+
+        // check maxEnd
+        XCTAssertEqual(10, iNode0.maxEnd)
+        XCTAssertEqual(5, iNode1.maxEnd)
+        XCTAssertEqual(6, iNode2.maxEnd)
+        XCTAssertEqual(5, iNode3.maxEnd)
+        XCTAssertEqual(6, iNode4.maxEnd)
+
+        XCTAssertTrue(interval0 == interval0) // {5, 10} == {5, 10}
+        XCTAssertFalse(interval0 != interval0) // {5, 10} != {5, 10}
+
+        XCTAssertFalse(interval0 > interval0) // {5, 10} > {5, 10}
+        XCTAssertTrue(interval0 > interval1) // {5, 10} > {5, 5}
+        XCTAssertTrue(interval0 > interval2) // {5, 10} > {5, 6}
+        XCTAssertTrue(interval0 > interval3) // {5, 10} > {-5, 5}
+        XCTAssertTrue(interval0 > interval4) // {5, 10} > {0, 6}
+        XCTAssertFalse(interval1 > interval2) // {5, 5} > {5, 6}
+        XCTAssertTrue(interval2 > interval3) // {5, 6} > {-5, 5}
+        XCTAssertFalse(interval3 > interval4) // {-5, 5} > {0, 6}
+
+        XCTAssertFalse(interval0 < interval0) // {5, 10} < {5, 10}
+        XCTAssertFalse(interval0 < interval1) // {5, 10} < {5, 5}
+        XCTAssertFalse(interval0 < interval2) // {5, 10} < {5, 6}
+        XCTAssertFalse(interval0 < interval3) // {5, 10} < {-5, 5}
+        XCTAssertFalse(interval0 < interval4) // {5, 10} < {0, 6}
+        XCTAssertTrue(interval1 < interval2) // {5, 5} < {5, 6}
+        XCTAssertFalse(interval2 < interval3) // {5, 6} < {-5, 5}
+        XCTAssertTrue(interval3 < interval4) // {-5, 5} < {0, 6}
+
+        XCTAssertTrue(interval0 >= interval0) // {5, 10} >= {5, 10}
+        XCTAssertTrue(interval0 >= interval1) // {5, 10} >= {5, 5}
+        XCTAssertTrue(interval0 >= interval2) // {5, 10} >= {5, 6}
+        XCTAssertTrue(interval0 >= interval3) // {5, 10} >= {-5, 5}
+        XCTAssertTrue(interval0 >= interval4) // {5, 10} >= {0, 6}
+        XCTAssertFalse(interval1 >= interval2) // {5, 5} >= {5, 6}
+        XCTAssertTrue(interval2 >= interval3) // {5, 6} >= {-5, 5}
+        XCTAssertFalse(interval3 >= interval4) // {-5, 5} >= {0, 6}
+
+        XCTAssertTrue(interval0 <= interval0) // {5, 10} <= {5, 10}
+        XCTAssertFalse(interval0 <= interval1) // {5, 10} <= {5, 5}
+        XCTAssertFalse(interval0 <= interval2) // {5, 10} <= {5, 6}
+        XCTAssertFalse(interval0 <= interval3) // {5, 10} <= {-5, 5}
+        XCTAssertFalse(interval0 <= interval4) // {5, 10} <= {0, 6}
+        XCTAssertTrue(interval1 <= interval2) // {5, 5} <= {5, 6}
+        XCTAssertFalse(interval2 <= interval3) // {5, 6} <= {-5, 5}
+        XCTAssertTrue(interval3 <= interval4) // {-5, 5} <= {0, 6}
     }
 
     // test comparable functions for positively valued intervals of type Int
@@ -114,9 +275,7 @@ final class IntervalTreeTests: XCTestCase {
 
         // --- equality
         let interval0_same = try! Interval(start: 14, end: 16)
-        //XCTAssertTrue(interval0 === interval0)
         XCTAssertTrue(interval0 == interval0)
-        //XCTAssertFalse(interval0 === interval0_same)
         XCTAssertTrue(interval0 == interval0_same)
         let interval0_start_same = try! Interval(start: 14, end: 20)
         let interval0_end_same = try! Interval(start: 10, end: 16)
@@ -128,61 +287,61 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertFalse(interval0 != interval0_same)
         XCTAssertTrue(interval0 != interval1)
 
-        // --- gt: reference interval must be to the right of test interval end
+        // --- gt: rue when a.start > b.start or a.start == b.start and a.end > b.end
         XCTAssertFalse(interval0 > interval0, "overlaps self")
-        XCTAssertFalse(interval0 > interval1, "overlaps from left")
+        XCTAssertTrue(interval0 > interval1, "overlaps from left")
         XCTAssertFalse(interval0 > interval2, "overlaps from right")
-        XCTAssertFalse(interval0 > interval3, "touches left")
+        XCTAssertTrue(interval0 > interval3, "touches left")
         XCTAssertFalse(interval0 > interval4, "touches right")
-        XCTAssertFalse(interval0 > interval5, "within - overlaps start")
+        XCTAssertTrue(interval0 > interval5, "within - overlaps start")
         XCTAssertFalse(interval0 > interval6, "within - overlaps end")
-        XCTAssertFalse(interval0 > interval7, "within - single point on left")
+        XCTAssertTrue(interval0 > interval7, "within - single point on left")
         XCTAssertFalse(interval0 > interval8, "within - single point in middle")
         XCTAssertFalse(interval0 > interval9, "within - single point on right")
-        XCTAssertFalse(interval0 > interval10, "spans left and right")
+        XCTAssertTrue(interval0 > interval10, "spans left and right")
         XCTAssertFalse(interval0 > interval11, "outside (right)")
         XCTAssertTrue(interval0 > interval12, "outside (left)")
 
-        // --- gte: reference interval must begin at or to the right of test interval end
+        // --- gte: true when a.start > b.start or a.start == b.start but a.end > b.end or a == b
         XCTAssertTrue(interval0 >= interval0, "overlaps self")
-        XCTAssertFalse(interval0 >= interval1, "overlaps from left")
+        XCTAssertTrue(interval0 >= interval1, "overlaps from left")
         XCTAssertFalse(interval0 >= interval2, "overlaps from right")
         XCTAssertTrue(interval0 >= interval3, "touches left")
         XCTAssertFalse(interval0 >= interval4, "touches right")
-        XCTAssertFalse(interval0 >= interval5, "within - overlaps start")
+        XCTAssertTrue(interval0 >= interval5, "within - overlaps start")
         XCTAssertFalse(interval0 >= interval6, "within - overlaps end")
         XCTAssertTrue(interval0 >= interval7, "within - single point on left")
         XCTAssertFalse(interval0 >= interval8, "within - single point in middle")
         XCTAssertFalse(interval0 >= interval9, "within - single point on right")
-        XCTAssertFalse(interval0 >= interval10, "spans left and right")
+        XCTAssertTrue(interval0 >= interval10, "spans left and right")
         XCTAssertFalse(interval0 >= interval11, "outside (right)")
         XCTAssertTrue(interval0 >= interval12, "outside (left)")
 
-        // --- lt: test interval must be to the right of reference interval end
+        // --- lt: true when a.start < b.start or a.start == b.start and a.end < b.end
         XCTAssertFalse(interval0 < interval0, "overlaps self")
         XCTAssertFalse(interval0 < interval1, "overlaps from left")
-        XCTAssertFalse(interval0 < interval2, "overlaps from right")
+        XCTAssertTrue(interval0 < interval2, "overlaps from right")
         XCTAssertFalse(interval0 < interval3, "touches left")
-        XCTAssertFalse(interval0 < interval4, "touches right")
+        XCTAssertTrue(interval0 < interval4, "touches right")
         XCTAssertFalse(interval0 < interval5, "within - overlaps start")
-        XCTAssertFalse(interval0 < interval6, "within - overlaps end")
+        XCTAssertTrue(interval0 < interval6, "within - overlaps end")
         XCTAssertFalse(interval0 < interval7, "within - single point on left")
-        XCTAssertFalse(interval0 < interval8, "within - single point in middle")
-        XCTAssertFalse(interval0 < interval9, "within - single point on right")
+        XCTAssertTrue(interval0 < interval8, "within - single point in middle")
+        XCTAssertTrue(interval0 < interval9, "within - single point on right")
         XCTAssertFalse(interval0 < interval10, "spans left and right")
         XCTAssertTrue(interval0 < interval11, "outside (right)")
         XCTAssertFalse(interval0 < interval12, "outside (left)")
 
-        // --- lte: test interval must begin at or to the right of reference interval end
+        // --- lte: true when a.start < b.start or a.start == b.start but a.end < b.end or a == b
         XCTAssertTrue(interval0 <= interval0, "overlaps self")
         XCTAssertFalse(interval0 <= interval1, "overlaps from left")
-        XCTAssertFalse(interval0 <= interval2, "overlaps from right")
+        XCTAssertTrue(interval0 <= interval2, "overlaps from right")
         XCTAssertFalse(interval0 <= interval3, "touches left")
         XCTAssertTrue(interval0 <= interval4, "touches right")
         XCTAssertFalse(interval0 <= interval5, "within - overlaps start")
-        XCTAssertFalse(interval0 <= interval6, "within - overlaps end")
+        XCTAssertTrue(interval0 <= interval6, "within - overlaps end")
         XCTAssertFalse(interval0 <= interval7, "within - single point on left")
-        XCTAssertFalse(interval0 <= interval8, "within - single point in middle")
+        XCTAssertTrue(interval0 <= interval8, "within - single point in middle")
         XCTAssertTrue(interval0 <= interval9, "within - single point on right")
         XCTAssertFalse(interval0 <= interval10, "spans left and right")
         XCTAssertTrue(interval0 <= interval11, "outside (right)")
@@ -224,45 +383,45 @@ final class IntervalTreeTests: XCTestCase {
 
         // --- gt: reference interval must be to the right of test interval end
         XCTAssertFalse(interval0 > interval0, "overlaps self")
-        XCTAssertFalse(interval0 > interval1, "overlaps from left")
+        XCTAssertTrue(interval0 > interval1, "overlaps from left")
         XCTAssertFalse(interval0 > interval2, "overlaps from right")
-        XCTAssertFalse(interval0 > interval3, "touches left")
+        XCTAssertTrue(interval0 > interval3, "touches left")
         XCTAssertFalse(interval0 > interval4, "touches right")
-        XCTAssertFalse(interval0 > interval5, "within - overlaps start")
+        XCTAssertTrue(interval0 > interval5, "within - overlaps start")
         XCTAssertFalse(interval0 > interval6, "within - overlaps end")
-        XCTAssertFalse(interval0 > interval7, "within - single point on left")
+        XCTAssertTrue(interval0 > interval7, "within - single point on left")
         XCTAssertFalse(interval0 > interval8, "within - single point in middle")
         XCTAssertFalse(interval0 > interval9, "within - single point on right")
-        XCTAssertFalse(interval0 > interval10, "spans left and right")
+        XCTAssertTrue(interval0 > interval10, "spans left and right")
         XCTAssertFalse(interval0 > interval11, "outside (right)")
         XCTAssertTrue(interval0 > interval12, "outside (left)")
 
         // --- gte: reference interval must begin at or to the right of test interval end
         XCTAssertTrue(interval0 >= interval0, "overlaps self")
-        XCTAssertFalse(interval0 >= interval1, "overlaps from left")
+        XCTAssertTrue(interval0 >= interval1, "overlaps from left")
         XCTAssertFalse(interval0 >= interval2, "overlaps from right")
         XCTAssertTrue(interval0 >= interval3, "touches left")
         XCTAssertFalse(interval0 >= interval4, "touches right")
-        XCTAssertFalse(interval0 >= interval5, "within - overlaps start")
+        XCTAssertTrue(interval0 >= interval5, "within - overlaps start")
         XCTAssertFalse(interval0 >= interval6, "within - overlaps end")
         XCTAssertTrue(interval0 >= interval7, "within - single point on left")
         XCTAssertFalse(interval0 >= interval8, "within - single point in middle")
         XCTAssertFalse(interval0 >= interval9, "within - single point on right")
-        XCTAssertFalse(interval0 >= interval10, "spans left and right")
+        XCTAssertTrue(interval0 >= interval10, "spans left and right")
         XCTAssertFalse(interval0 >= interval11, "outside (right)")
         XCTAssertTrue(interval0 >= interval12, "outside (left)")
 
         // --- lt: test interval must be to the right of reference interval end
         XCTAssertFalse(interval0 < interval0, "overlaps self")
         XCTAssertFalse(interval0 < interval1, "overlaps from left")
-        XCTAssertFalse(interval0 < interval2, "overlaps from right")
+        XCTAssertTrue(interval0 < interval2, "overlaps from right")
         XCTAssertFalse(interval0 < interval3, "touches left")
-        XCTAssertFalse(interval0 < interval4, "touches right")
+        XCTAssertTrue(interval0 < interval4, "touches right")
         XCTAssertFalse(interval0 < interval5, "within - overlaps start")
-        XCTAssertFalse(interval0 < interval6, "within - overlaps end")
+        XCTAssertTrue(interval0 < interval6, "within - overlaps end")
         XCTAssertFalse(interval0 < interval7, "within - single point on left")
-        XCTAssertFalse(interval0 < interval8, "within - single point in middle")
-        XCTAssertFalse(interval0 < interval9, "within - single point on right")
+        XCTAssertTrue(interval0 < interval8, "within - single point in middle")
+        XCTAssertTrue(interval0 < interval9, "within - single point on right")
         XCTAssertFalse(interval0 < interval10, "spans left and right")
         XCTAssertTrue(interval0 < interval11, "outside (right)")
         XCTAssertFalse(interval0 < interval12, "outside (left)")
@@ -270,13 +429,13 @@ final class IntervalTreeTests: XCTestCase {
         // --- lte: test interval must begin at or to the right of reference interval end
         XCTAssertTrue(interval0 <= interval0, "overlaps self")
         XCTAssertFalse(interval0 <= interval1, "overlaps from left")
-        XCTAssertFalse(interval0 <= interval2, "overlaps from right")
+        XCTAssertTrue(interval0 <= interval2, "overlaps from right")
         XCTAssertFalse(interval0 <= interval3, "touches left")
         XCTAssertTrue(interval0 <= interval4, "touches right")
         XCTAssertFalse(interval0 <= interval5, "within - overlaps start")
-        XCTAssertFalse(interval0 <= interval6, "within - overlaps end")
+        XCTAssertTrue(interval0 <= interval6, "within - overlaps end")
         XCTAssertFalse(interval0 <= interval7, "within - single point on left")
-        XCTAssertFalse(interval0 <= interval8, "within - single point in middle")
+        XCTAssertTrue(interval0 <= interval8, "within - single point in middle")
         XCTAssertTrue(interval0 <= interval9, "within - single point on right")
         XCTAssertFalse(interval0 <= interval10, "spans left and right")
         XCTAssertTrue(interval0 <= interval11, "outside (right)")
@@ -318,45 +477,45 @@ final class IntervalTreeTests: XCTestCase {
 
         // --- gt: reference interval must be to the right of test interval end
         XCTAssertFalse(interval0 > interval0, "overlaps self")
-        XCTAssertFalse(interval0 > interval1, "overlaps from left")
+        XCTAssertTrue(interval0 > interval1, "overlaps from left")
         XCTAssertFalse(interval0 > interval2, "overlaps from right")
-        XCTAssertFalse(interval0 > interval3, "touches left")
+        XCTAssertTrue(interval0 > interval3, "touches left")
         XCTAssertFalse(interval0 > interval4, "touches right")
-        XCTAssertFalse(interval0 > interval5, "within - overlaps start")
+        XCTAssertTrue(interval0 > interval5, "within - overlaps start")
         XCTAssertFalse(interval0 > interval6, "within - overlaps end")
-        XCTAssertFalse(interval0 > interval7, "within - single point on left")
+        XCTAssertTrue(interval0 > interval7, "within - single point on left")
         XCTAssertFalse(interval0 > interval8, "within - single point in middle")
         XCTAssertFalse(interval0 > interval9, "within - single point on right")
-        XCTAssertFalse(interval0 > interval10, "spans left and right")
+        XCTAssertTrue(interval0 > interval10, "spans left and right")
         XCTAssertFalse(interval0 > interval11, "outside (right)")
         XCTAssertTrue(interval0 > interval12, "outside (left)")
 
         // --- gte: reference interval must begin at or to the right of test interval end
         XCTAssertTrue(interval0 >= interval0, "overlaps self")
-        XCTAssertFalse(interval0 >= interval1, "overlaps from left")
+        XCTAssertTrue(interval0 >= interval1, "overlaps from left")
         XCTAssertFalse(interval0 >= interval2, "overlaps from right")
         XCTAssertTrue(interval0 >= interval3, "touches left")
         XCTAssertFalse(interval0 >= interval4, "touches right")
-        XCTAssertFalse(interval0 >= interval5, "within - overlaps start")
+        XCTAssertTrue(interval0 >= interval5, "within - overlaps start")
         XCTAssertFalse(interval0 >= interval6, "within - overlaps end")
         XCTAssertTrue(interval0 >= interval7, "within - single point on left")
         XCTAssertFalse(interval0 >= interval8, "within - single point in middle")
         XCTAssertFalse(interval0 >= interval9, "within - single point on right")
-        XCTAssertFalse(interval0 >= interval10, "spans left and right")
+        XCTAssertTrue(interval0 >= interval10, "spans left and right")
         XCTAssertFalse(interval0 >= interval11, "outside (right)")
         XCTAssertTrue(interval0 >= interval12, "outside (left)")
 
         // --- lt: test interval must be to the right of reference interval end
         XCTAssertFalse(interval0 < interval0, "overlaps self")
         XCTAssertFalse(interval0 < interval1, "overlaps from left")
-        XCTAssertFalse(interval0 < interval2, "overlaps from right")
+        XCTAssertTrue(interval0 < interval2, "overlaps from right")
         XCTAssertFalse(interval0 < interval3, "touches left")
-        XCTAssertFalse(interval0 < interval4, "touches right")
+        XCTAssertTrue(interval0 < interval4, "touches right")
         XCTAssertFalse(interval0 < interval5, "within - overlaps start")
-        XCTAssertFalse(interval0 < interval6, "within - overlaps end")
+        XCTAssertTrue(interval0 < interval6, "within - overlaps end")
         XCTAssertFalse(interval0 < interval7, "within - single point on left")
-        XCTAssertFalse(interval0 < interval8, "within - single point in middle")
-        XCTAssertFalse(interval0 < interval9, "within - single point on right")
+        XCTAssertTrue(interval0 < interval8, "within - single point in middle")
+        XCTAssertTrue(interval0 < interval9, "within - single point on right")
         XCTAssertFalse(interval0 < interval10, "spans left and right")
         XCTAssertTrue(interval0 < interval11, "outside (right)")
         XCTAssertFalse(interval0 < interval12, "outside (left)")
@@ -364,13 +523,13 @@ final class IntervalTreeTests: XCTestCase {
         // --- lte: test interval must begin at or to the right of reference interval end
         XCTAssertTrue(interval0 <= interval0, "overlaps self")
         XCTAssertFalse(interval0 <= interval1, "overlaps from left")
-        XCTAssertFalse(interval0 <= interval2, "overlaps from right")
+        XCTAssertTrue(interval0 <= interval2, "overlaps from right")
         XCTAssertFalse(interval0 <= interval3, "touches left")
         XCTAssertTrue(interval0 <= interval4, "touches right")
         XCTAssertFalse(interval0 <= interval5, "within - overlaps start")
-        XCTAssertFalse(interval0 <= interval6, "within - overlaps end")
+        XCTAssertTrue(interval0 <= interval6, "within - overlaps end")
         XCTAssertFalse(interval0 <= interval7, "within - single point on left")
-        XCTAssertFalse(interval0 <= interval8, "within - single point in middle")
+        XCTAssertTrue(interval0 <= interval8, "within - single point in middle")
         XCTAssertTrue(interval0 <= interval9, "within - single point on right")
         XCTAssertFalse(interval0 <= interval10, "spans left and right")
         XCTAssertTrue(interval0 <= interval11, "outside (right)")
@@ -412,45 +571,45 @@ final class IntervalTreeTests: XCTestCase {
 
         // --- gt: reference interval must be to the right of test interval end
         XCTAssertFalse(interval0 > interval0, "overlaps self")
-        XCTAssertFalse(interval0 > interval1, "overlaps from left")
+        XCTAssertTrue(interval0 > interval1, "overlaps from left")
         XCTAssertFalse(interval0 > interval2, "overlaps from right")
-        XCTAssertFalse(interval0 > interval3, "touches left")
+        XCTAssertTrue(interval0 > interval3, "touches left")
         XCTAssertFalse(interval0 > interval4, "touches right")
-        XCTAssertFalse(interval0 > interval5, "within - overlaps start")
+        XCTAssertTrue(interval0 > interval5, "within - overlaps start")
         XCTAssertFalse(interval0 > interval6, "within - overlaps end")
-        XCTAssertFalse(interval0 > interval7, "within - single point on left")
+        XCTAssertTrue(interval0 > interval7, "within - single point on left")
         XCTAssertFalse(interval0 > interval8, "within - single point in middle")
         XCTAssertFalse(interval0 > interval9, "within - single point on right")
-        XCTAssertFalse(interval0 > interval10, "spans left and right")
+        XCTAssertTrue(interval0 > interval10, "spans left and right")
         XCTAssertFalse(interval0 > interval11, "outside (right)")
         XCTAssertTrue(interval0 > interval12, "outside (left)")
 
         // --- gte: reference interval must begin at or to the right of test interval end
         XCTAssertTrue(interval0 >= interval0, "overlaps self")
-        XCTAssertFalse(interval0 >= interval1, "overlaps from left")
+        XCTAssertTrue(interval0 >= interval1, "overlaps from left")
         XCTAssertFalse(interval0 >= interval2, "overlaps from right")
         XCTAssertTrue(interval0 >= interval3, "touches left")
         XCTAssertFalse(interval0 >= interval4, "touches right")
-        XCTAssertFalse(interval0 >= interval5, "within - overlaps start")
+        XCTAssertTrue(interval0 >= interval5, "within - overlaps start")
         XCTAssertFalse(interval0 >= interval6, "within - overlaps end")
         XCTAssertTrue(interval0 >= interval7, "within - single point on left")
         XCTAssertFalse(interval0 >= interval8, "within - single point in middle")
         XCTAssertFalse(interval0 >= interval9, "within - single point on right")
-        XCTAssertFalse(interval0 >= interval10, "spans left and right")
+        XCTAssertTrue(interval0 >= interval10, "spans left and right")
         XCTAssertFalse(interval0 >= interval11, "outside (right)")
         XCTAssertTrue(interval0 >= interval12, "outside (left)")
 
         // --- lt: test interval must be to the right of reference interval end
         XCTAssertFalse(interval0 < interval0, "overlaps self")
         XCTAssertFalse(interval0 < interval1, "overlaps from left")
-        XCTAssertFalse(interval0 < interval2, "overlaps from right")
+        XCTAssertTrue(interval0 < interval2, "overlaps from right")
         XCTAssertFalse(interval0 < interval3, "touches left")
-        XCTAssertFalse(interval0 < interval4, "touches right")
+        XCTAssertTrue(interval0 < interval4, "touches right")
         XCTAssertFalse(interval0 < interval5, "within - overlaps start")
-        XCTAssertFalse(interval0 < interval6, "within - overlaps end")
+        XCTAssertTrue(interval0 < interval6, "within - overlaps end")
         XCTAssertFalse(interval0 < interval7, "within - single point on left")
-        XCTAssertFalse(interval0 < interval8, "within - single point in middle")
-        XCTAssertFalse(interval0 < interval9, "within - single point on right")
+        XCTAssertTrue(interval0 < interval8, "within - single point in middle")
+        XCTAssertTrue(interval0 < interval9, "within - single point on right")
         XCTAssertFalse(interval0 < interval10, "spans left and right")
         XCTAssertTrue(interval0 < interval11, "outside (right)")
         XCTAssertFalse(interval0 < interval12, "outside (left)")
@@ -458,13 +617,13 @@ final class IntervalTreeTests: XCTestCase {
         // --- lte: test interval must begin at or to the right of reference interval end
         XCTAssertTrue(interval0 <= interval0, "overlaps self")
         XCTAssertFalse(interval0 <= interval1, "overlaps from left")
-        XCTAssertFalse(interval0 <= interval2, "overlaps from right")
+        XCTAssertTrue(interval0 <= interval2, "overlaps from right")
         XCTAssertFalse(interval0 <= interval3, "touches left")
         XCTAssertTrue(interval0 <= interval4, "touches right")
         XCTAssertFalse(interval0 <= interval5, "within - overlaps start")
-        XCTAssertFalse(interval0 <= interval6, "within - overlaps end")
+        XCTAssertTrue(interval0 <= interval6, "within - overlaps end")
         XCTAssertFalse(interval0 <= interval7, "within - single point on left")
-        XCTAssertFalse(interval0 <= interval8, "within - single point in middle")
+        XCTAssertTrue(interval0 <= interval8, "within - single point in middle")
         XCTAssertTrue(interval0 <= interval9, "within - single point on right")
         XCTAssertFalse(interval0 <= interval10, "spans left and right")
         XCTAssertTrue(interval0 <= interval11, "outside (right)")
@@ -545,7 +704,7 @@ final class IntervalTreeTests: XCTestCase {
         let intervalNode11 = IntervalTreeNode(value: interval11) // outside (right)
         let intervalNode12 = IntervalTreeNode(value: interval12) // outside (left)
 
-        XCTAssertEqual(2, intervalNode0.length)
+        XCTAssertEqual(2.0, intervalNode0.length)
         XCTAssertEqual(1.0001, intervalNode1.length)
         XCTAssertEqual(0.99, intervalNode2.length)
         XCTAssertEqual(2, intervalNode3.length)
@@ -690,8 +849,6 @@ final class IntervalTreeTests: XCTestCase {
         let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4, interval5, interval6])
         let interval7 = try! Interval(start: 10, end: 20) // not inserted in tree
 
-        tree.draw()
-
         XCTAssertTrue(tree.contains(value: interval0))
         XCTAssertTrue(tree.contains(value: interval1))
         XCTAssertTrue(tree.contains(value: interval2))
@@ -710,10 +867,13 @@ final class IntervalTreeTests: XCTestCase {
         let interval4 = try! Interval(start: 0, end: 4) // strictly left
         let interval5 = try! Interval(start: 10, end: 12) // overlaps interval0 on right
         let interval6 = try! Interval(start: 1, end: 5) // overlaps interval0 on left
-        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4, interval5, interval6])
-        let interval7 = try! Interval(start: 10, end: 20) // not inserted in tree
-        XCTAssertEqual(tree.size, 7)
-        XCTAssertEqual(tree.height(), 4)
+        let interval7 = try! Interval(start: 5, end: 6) // overlaps interval0 on start (to test retrieval checks end)
+        let interval8 = try! Interval(start: 5, end: 8) // overlaps interval0 on start (to test retrieval checks end)
+        let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4, interval5, interval6, interval7, interval8])
+        let interval10 = try! Interval(start: 10, end: 20) // not inserted in tree
+        XCTAssertEqual(tree.size, 9)
+        XCTAssertEqual(tree.height(), 5)
+        tree.draw()
 
         let i0 = tree.search(value: interval0)!
         let i1 = tree.search(value: interval1)!
@@ -722,7 +882,9 @@ final class IntervalTreeTests: XCTestCase {
         let i4 = tree.search(value: interval4)!
         let i5 = tree.search(value: interval5)!
         let i6 = tree.search(value: interval6)!
-        let noI = tree.search(value: interval7)
+        let i7 = tree.search(value: interval7)!
+        let i8 = tree.search(value: interval8)!
+        let noI = tree.search(value: interval10)
 
         XCTAssertEqual(i0.value, interval0)
         XCTAssertEqual(i1.value, interval1)
@@ -731,6 +893,8 @@ final class IntervalTreeTests: XCTestCase {
         XCTAssertEqual(i4.value, interval4)
         XCTAssertEqual(i5.value, interval5)
         XCTAssertEqual(i6.value, interval6)
+        XCTAssertEqual(i7.value, interval7)
+        XCTAssertEqual(i8.value, interval8)
         // not in tree
         XCTAssertNil(noI)
 
@@ -771,10 +935,8 @@ final class IntervalTreeTests: XCTestCase {
         let result = tree.overlaps(interval: overlaps)
 
         XCTAssertEqual(result.count, 2)
-        XCTAssertEqual(result[0].start, 15)
-        XCTAssertEqual(result[0].end, 20)
-        XCTAssertEqual(result[1].start, 10)
-        XCTAssertEqual(result[1].end, 16)
+        XCTAssertEqual(result[0], interval0)
+        XCTAssertEqual(result[1], interval1)
     }
 
     // returns set of intervals that the given interval is within
@@ -783,23 +945,26 @@ final class IntervalTreeTests: XCTestCase {
         let intervalNode0 = IntervalTreeNode(value: interval0) // root of tree
         let tree = IntervalTree(node: intervalNode0)
 
+        let interval1 = try! Interval(start: 10, end: 30)
+        let interval2 = try! Interval(start: 16, end: 19)
+        let interval3 = try! Interval(start: 5, end: 20)
+        let interval4 = try! Interval(start: 12, end: 16)
+        let interval5 = try! Interval(start: 30, end: 40)
+
         // Insert some intervals
-        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 10, end: 30))) // match
-        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 16, end: 19)))
-        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 5, end: 20))) // match
-        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 12, end: 16))) // match
-        try! tree.insert(node: IntervalTreeNode(value: Interval(start: 30, end: 40)))
+        try! tree.insert(node: IntervalTreeNode(value: interval1)) // match
+        try! tree.insert(node: IntervalTreeNode(value: interval2))
+        try! tree.insert(node: IntervalTreeNode(value: interval3)) // match
+        try! tree.insert(node: IntervalTreeNode(value: interval4)) // match
+        try! tree.insert(node: IntervalTreeNode(value: interval5))
         tree.draw()
 
         // Search for intervals that intersect with [14, 16]
         let result = tree.within(interval: try! Interval(start: 14, end: 16))
         XCTAssertEqual(result.count, 3)
-        XCTAssertEqual(result[0].start, 10)
-        XCTAssertEqual(result[0].end, 30)
-        XCTAssertEqual(result[1].start, 5)
-        XCTAssertEqual(result[1].end, 20)
-        XCTAssertEqual(result[2].start, 12)
-        XCTAssertEqual(result[2].end, 16)
+        XCTAssertEqual(result[0], interval1)
+        XCTAssertEqual(result[1], interval3)
+        XCTAssertEqual(result[2], interval4)
     }
 
     /*
@@ -1067,7 +1232,6 @@ final class IntervalTreeTests: XCTestCase {
         let interval3 = try! Interval(start: 7, end: 9)
         let interval4 = try! Interval(start: 12, end: 15)
         let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
-        // NOTE: auto balance is not (yet) implemented on IntervalTree - so use interval values that correspond to tree structure above
         let intervalNP = try! Interval(start: 5, end: 11) // not in tree
         tree.draw()
 
@@ -1113,9 +1277,7 @@ final class IntervalTreeTests: XCTestCase {
         tree.draw()
     }
 
-
-    // TODO: structure will change iff autobalance is implemented
-    // since we inherit from AVLTree, each deletion should rebalance tree
+    // since we inherit from AVLTree, a deletion might rebalance tree
     func testDeleteIntervals() {
         let interval0 = try! Interval(start: 5, end: 10)
         let interval1 = try! Interval(start: -5, end: 5)
@@ -1124,45 +1286,64 @@ final class IntervalTreeTests: XCTestCase {
         let interval4 = try! Interval(start: 12, end: 15)
         let tree = IntervalTree<Int>(array: [interval0, interval1, interval2, interval3, interval4])
         XCTAssertTrue(tree.size == 5)
+        XCTAssertTrue(tree.size == tree.toArray().count)
         XCTAssertTrue(tree.height() == 3)
+
+        // tree structure
         XCTAssertEqual(tree.root?.value, interval0)
+        XCTAssertEqual(tree.root?.parent, nil)
         XCTAssertEqual(tree.root?.left?.value, interval1)
+        XCTAssertEqual(tree.root?.left?.parent?.value, interval0)
         XCTAssertEqual(tree.root?.right?.value, interval2)
+        XCTAssertEqual(tree.root?.right?.parent?.value, interval0)
         XCTAssertEqual(tree.root?.right?.left?.value, interval3)
+        XCTAssertEqual(tree.root?.right?.left?.parent?.value, interval2)
         XCTAssertEqual(tree.root?.right?.right?.value, interval4)
-        tree.draw()
+        XCTAssertEqual(tree.root?.right?.right?.parent?.value, interval2)
+        tree.draw() // ([-5, 5]? <- [5, 10] -> ([7, 9]? <- [8, 12] -> [12, 15]?))
 
-        // tree is now: ([-5, 5]? <- [5, 10] -> ([7, 9]? <- [8, 12] -> [12, 15]?))
         // remove leaf - note autobalance
-        _ = tree.remove(value: interval1) // [-5, 5]
+        let removedNode = tree.remove(value: interval1) // [-5, 5]
+        tree.drawParents()
+        XCTAssertFalse(removedNode!.hasAnyChild)
+        XCTAssertNil(removedNode!.parent)
+
+        // assert deleted values are not in tree
+        XCTAssertNil(tree.search(value: interval1))
+        // check structure
         XCTAssertTrue(tree.size == 4)
+        XCTAssertTrue(tree.size == tree.toArray().count)
         XCTAssertTrue(tree.height() == 3)
-        XCTAssertEqual(tree.root?.value, interval0)
-        XCTAssertNil(tree.root?.left)
-        XCTAssertEqual(tree.root?.right?.value, interval2)
-        XCTAssertEqual(tree.root?.right?.left?.value, interval3)
-        XCTAssertEqual(tree.root?.right?.right?.value, interval4)
-        tree.draw()
-
-        // tree is now: ([5, 10] -> ([7, 9]? <- [8, 12] -> [12, 15]?))
-        // remove the root
-        _ = tree.remove(value: tree.root!.value) // [5,10]
-        XCTAssertTrue(tree.size == 3)
-        XCTAssertTrue(tree.height() == 3)
-        XCTAssertEqual(tree.root?.value.start, 7) // [7,9]
-        XCTAssertEqual(tree.root?.right?.value, interval2)
-        XCTAssertEqual(tree.root?.right?.right?.value, interval4)
-        tree.draw()
-
-        // tree is now: (([7, 9] -> [8, 12] -> [12, 15]?))
-        // remove inner node (root, since tree rebalanced)
-        _ = tree.remove(value: tree.root!.value) // [8, 12]
-        XCTAssertTrue(tree.size == 2)
-        XCTAssertTrue(tree.height() == 2)
-        XCTAssertNotEqual(tree.root?.value.start, 7)
-        XCTAssertNil(tree.root?.left?.value)
+        XCTAssertEqual(tree.root?.value, interval2)
         XCTAssertEqual(tree.root?.right?.value, interval4)
-        tree.draw()
+        XCTAssertEqual(tree.root?.left?.value, interval0)
+        XCTAssertEqual(tree.root?.left?.right?.value, interval3)
+        tree.draw() // (({5, 10}:10 -> {7, 9}:9?) <- {8, 12}*:12 -> {12, 15}:15?)
+        // check parents
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertEqual(tree.root?.right?.parent?.value, interval2)
+        XCTAssertEqual(tree.root?.left?.parent?.value, interval2)
+        XCTAssertEqual(tree.root?.left?.right?.parent?.value, interval0)
+
+        // remove the root
+        _ = tree.remove(value: tree.root!.value) // {8, 12}
+        // regression test: this was failing after removal. A node ({7, 9}) was duplicated during remove:
+        // (({5, 10}:10 -> {7, 9}:9?) <- {7, 9}:12 -> {12, 15}:15?)
+        XCTAssertTrue(tree.size == tree.toArray().count)
+        tree.draw() // ({5, 10}:10? <- {7, 9}*:12 -> {12, 15}:15?)
+        // assert deleted values are not in tree
+        XCTAssertNil(tree.search(value: interval1))
+        // check structure
+        XCTAssertTrue(tree.size == 3)
+        XCTAssertTrue(tree.size == tree.toArray().count)
+        XCTAssertTrue(tree.height() == 2)
+        XCTAssertEqual(tree.root?.value, interval3)
+        XCTAssertEqual(tree.root?.right?.value, interval4)
+        XCTAssertEqual(tree.root?.left?.value, interval0)
+        // check parents
+        XCTAssertNil(tree.root?.parent)
+        XCTAssertEqual(tree.root?.right?.parent?.value, interval3)
+        XCTAssertEqual(tree.root?.left?.parent?.value, interval3)
     }
 
 }
