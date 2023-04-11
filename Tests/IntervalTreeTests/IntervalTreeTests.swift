@@ -1019,7 +1019,7 @@ final class IntervalTreeTests: XCTestCase {
 
         // node not in tree
         let null_node = try! IntervalTreeNode(value: Interval(start: 0, end: 0))
-        XCTAssertNil(tree.minimum(node: null_node)?.value)
+        XCTAssertEqual(tree.minimum(node: null_node)?.value, null_node.value, "minimum of node that is not in tree is itself")
 
         // node in tree
         let root = tree.root!
@@ -1082,7 +1082,7 @@ final class IntervalTreeTests: XCTestCase {
 
         // node not in tree
         let null_node = try! IntervalTreeNode(value: Interval(start: 0, end: 0))
-        XCTAssertNil(tree.maximum(node: null_node)?.value)
+        XCTAssertEqual(tree.maximum(node: null_node)?.value, null_node.value, "maximum of node that is not in tree is itself")
 
         // node in tree
         let root = tree.root!
