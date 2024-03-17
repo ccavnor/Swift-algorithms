@@ -8,16 +8,17 @@ let package = Package(
     name: "Algorithms",
     // Products define the executables and libraries a package produces, and make them visible to other packages.
     products: [
-        .library(name: "ValueBasedStack", targets: ["ValueBasedStack"]),
-        .library(name: "ReferenceBasedBinarySearchTree",targets: ["BinarySearchTree"]),
-        .library(name: "ValueBasedBinarySearchTree",targets: ["ValueBasedBinarySearchTree"]),
+        .library(name: "BinarySearchTree",targets: ["BinarySearchTree"]),
         .library(name: "LinkedList", targets: ["LinkedList"]),
         .library(name: "IntervalTree", targets: ["IntervalTree"]),
         .library(name: "TimeIntervalTree", targets: ["TimeIntervalTree"]),
         .library(name: "AVLTree", targets: ["AVLTree"]),
         .library(name: "Trie", targets: ["Trie"]),
-        .library(name: "RETE", targets: ["RETE"]),
+        //.library(name: "RETE", targets: ["RETE"]),
         .library(name: "Queue", targets: ["Queue"]),
+        // functional code
+        .library(name: "ValueBasedStack", targets: ["ValueBasedStack"]),
+        .library(name: "ValueBasedBinarySearchTree",targets: ["ValueBasedBinarySearchTree"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -105,12 +106,12 @@ let package = Package(
         .testTarget(
             name: "TrieTests",
             dependencies: ["Trie"]),
-        .target(
-            name: "RETE",
-            dependencies: []),
-        .testTarget(
-            name: "ReteTests",
-            dependencies: ["RETE"]),
+//        .target(
+//            name: "RETE",
+//            dependencies: []),
+//        .testTarget(
+//            name: "ReteTests",
+//            dependencies: ["RETE"]),
         .target(
             name: "Queue",
             dependencies: ["IteratableListProtocol", "LinkedList"]),
