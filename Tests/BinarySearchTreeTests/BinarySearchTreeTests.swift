@@ -14,7 +14,7 @@ import XCTest
 
 
 // TODO: break into BinarySearchTree versus BinarySearchTreeNode tests
-class ReferenceBasedBinarySearchTreeTest: XCTestCase {
+class BinarySearchTreeTest: XCTestCase {
 
     //=======================================
     // BinarySearchTreeNode

@@ -68,25 +68,28 @@ let package = Package(
         .target(
             name: "BinarySearchTree",
             dependencies: ["TreeProtocol"],
-            path: "Sources/ReferenceBasedBinarySearchTree"),
+            path: "Sources/Trees/BST"),
         .testTarget(
-            name: "ReferenceBasedBinarySearchTreeTests",
+            name: "BinarySearchTreeTests",
             dependencies: ["BinarySearchTree"]),
         .target(
             name: "AVLTree",
-            dependencies: ["BinarySearchTree"]),
+            dependencies: ["BinarySearchTree"],
+            path: "Sources/Trees/AVLTree"),
         .testTarget(
             name: "AVLTreeTests",
             dependencies: ["AVLTree"]),
         .target(
             name: "IntervalTree",
-            dependencies: ["BinarySearchTree", "AVLTree"]),
+            dependencies: ["BinarySearchTree", "AVLTree"],
+            path: "Sources/Trees/IntervalTree"),
         .testTarget(
             name: "IntervalTreeTests",
             dependencies: ["IntervalTree"]),
         .target(
             name: "TimeIntervalTree",
-            dependencies: ["IntervalTree"]),
+            dependencies: ["IntervalTree"],
+            path: "Sources/Trees/TimeIntervalTree"),
         .testTarget(
             name: "TimeIntervalTreeTests",
             dependencies: ["TimeIntervalTree", "DateHelper"]),
