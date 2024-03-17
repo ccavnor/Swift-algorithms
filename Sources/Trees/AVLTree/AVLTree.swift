@@ -22,8 +22,8 @@ open class AVLTreeNode<T: TreeValueP>: BinarySearchTreeNode<T> {
 // MARK: - The AVL tree
 
 /// AVLTree is a BST that self balances iff the subtrees are more than one level of difference in height.
-/// This implementation of AVLTree is constrained to Numeric types, but the BinarySearchTree that it extends
-/// does not have this constraint.
+/// Like the BST, the AVL tree is a classification, not a Bag data structure - so duplicate values are
+/// not allowed.
 open class AVLTree<T: TreeValueP>: BinarySearchTree<T> {
     private var _root: AVLTreeNode<T>?
 
@@ -32,7 +32,6 @@ open class AVLTree<T: TreeValueP>: BinarySearchTree<T> {
         set { _root = newValue as? AVLTreeNode<T> }
     }
 
-    //required public init(value: T) {
     override public init(value: T) {
         super.init(value: value)
         _root = AVLTreeNode<T>(value: value)

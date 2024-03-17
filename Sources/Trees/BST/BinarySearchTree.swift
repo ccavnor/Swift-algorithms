@@ -1,5 +1,6 @@
 import TreeProtocol
 
+/// A Binary Search Tree Node
 open class BinarySearchTreeNode<T: TreeValueP>: TreeNodeP where T: Comparable {
     public typealias NodeType = BinarySearchTreeNode<T>
     public typealias NodeValue = T
@@ -103,7 +104,9 @@ open class BinarySearchTreeNode<T: TreeValueP>: TreeNodeP where T: Comparable {
 }
 
 
-/// A binary search tree. Each node stores a value and up to two children. This tree ignores any inserted duplicate elements.
+/// A binary search tree (BST). Each node stores a value and up to two children.
+/// As BSTs are utilized as classifications (or keys in a dictionary), they are not Bag data structures - meanding
+/// that duplicate values are not allowed. 
 /// This tree does not automatically balance itself. To make sure it is balanced, you should insert new values in
 /// randomized order, not in sorted order.
 open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {

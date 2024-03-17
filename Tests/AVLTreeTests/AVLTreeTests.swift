@@ -21,16 +21,39 @@ final class AVLTreeTests: XCTestCase {
         super.tearDown()
     }
 
-
-    func testSimple() {
+    func testSimpleTree() {
         let tree: AVLTree<Int> = autopopulateWithNodes(3)
-        XCTAssertTrue(tree is AVLTree<Int>)
-        XCTAssertTrue(tree.toArray().count == 3)
+        XCTAssertTrue(tree.size == 3)
+        XCTAssertEqual(2, tree.root?.value)
+        XCTAssertEqual(1, tree.root?.left?.value)
+        XCTAssertEqual(3, tree.root?.right?.value)
+        tree.draw()
+
+        // test with strings
+        let tree_string = AVLTree<String>(value: "a")
+        try! tree_string.insert(node: AVLTreeNode<String>(value: "b"))
+        try! tree_string.insert(node: AVLTreeNode<String>(value: "c"))
+
+        XCTAssertTrue(tree_string.size == 3)
+        XCTAssertEqual("b", tree_string.root?.value)
+        XCTAssertEqual("a", tree_string.root?.left?.value)
+        XCTAssertEqual("c", tree_string.root?.right?.value)
+
+        tree_string.draw()
     }
 
     //------------------------
     // Insertions
     //------------------------
+    func testDuplicatesIgnored() {
+        let tree: AVLTree<Int> = autopopulateWithNodes(3)
+        try! tree.insert(node: AVLTreeNode<Int>(value: 1)) // duplicate value
+        XCTAssertTrue(tree.size == 3)
+        XCTAssertEqual(2, tree.root?.value)
+        XCTAssertEqual(1, tree.root?.left?.value)
+        XCTAssertEqual(3, tree.root?.right?.value)
+    }
+
     func testAVLTreeBalancedAutoPopulate() {
         let tree: AVLTree<Int> = autopopulateWithNodes(5)
         XCTAssertTrue(tree is BinarySearchTree<Int>, "AVLTree inherits from BST")
@@ -702,6 +725,7 @@ final class AVLTreeTests: XCTestCase {
         XCTAssertFalse(tree.root!.left!.isRoot)
         XCTAssertFalse(tree.root!.right!.isRoot)
     }
+
 
     //-------------------------------------
     // Subscript access
