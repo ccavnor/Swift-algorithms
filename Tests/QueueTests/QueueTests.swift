@@ -9,7 +9,7 @@ import XCTest
 @testable import Queue
 
 // for testing the Queuing of custom types
-public enum Thing<T: Comparable>: Comparable {
+fileprivate enum Thing<T: Comparable>: Comparable {
     case node(T)
     
     public init(value: T) {
@@ -43,7 +43,9 @@ final class QueueTests: XCTestCase {
         let arr:[Int] = [8, 2, 10, 9, 7, 5, 2]
         let q = Queue<Int>(array: arr)
         XCTAssertTrue(q.size == 7)
-        // compare value-wise
+        // compare value-wise: Not that this is LinkedList's iterator,
+        // so shows values from head to tail, which is not how you
+        // might perceive the internal "order" of a queue.
         _ = zip(q, [8, 2, 10, 9, 7, 5, 2]).map { XCTAssertEqual($0, $1)}
         print(q)
     }
@@ -51,7 +53,9 @@ final class QueueTests: XCTestCase {
     func test_initFromArrayLiteral() {
         let q: Queue<Int> = [8, 2, 10, 9, 7, 5, 2]
         XCTAssertTrue(q.size == 7)
-        // compare value-wise
+        // compare value-wise: Not that this is LinkedList's iterator,
+        // so shows values from head to tail, which is not how you
+        // might perceive the internal "order" of a queue.
         _ = zip(q, [8, 2, 10, 9, 7, 5, 2]).map { XCTAssertEqual($0, $1)}
         print(q)
     }
