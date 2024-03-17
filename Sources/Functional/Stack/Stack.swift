@@ -7,10 +7,10 @@
 
 /// A Stack is a last-in-first-out (LIFO) data structure. This is a value-based implementation using an Enum as a container.
 /// This implementation is purely functional. All of its operations involve traversals over a list of nodes and run in O(n) time.
-public enum ValueBasedStack<T: Comparable> {
+public enum Stack<T: Comparable> {
     case empty
     case node(T)
-    indirect case list(T, ValueBasedStack)
+    indirect case list(T, Stack)
 
     public init() {
         self = .empty
@@ -32,7 +32,7 @@ public enum ValueBasedStack<T: Comparable> {
 
     /// Add a new element on the stack.
     /// Recursively calls itself to effectively reverse order of addition.
-    public func push(_ element: T) -> ValueBasedStack {
+    public func push(_ element: T) -> Stack {
         switch self {
         case .empty:
             return .node(element)
@@ -47,7 +47,7 @@ public enum ValueBasedStack<T: Comparable> {
     /// Returns an optional tuple of two elements:
     /// - the first is the popped value
     /// - the second is the rest of the list (to maintain )
-    public func pop() -> (T,ValueBasedStack)? {
+    public func pop() -> (T,Stack)? {
         if case let .list(v, rest) = self {
             return (v, rest)
         }
@@ -75,7 +75,7 @@ public enum ValueBasedStack<T: Comparable> {
     }
 }
 
-extension ValueBasedStack where T: Equatable {
+extension Stack where T: Equatable {
 
     /// Check if an element exists in the Queue. This will take O(n) time.
     ///
@@ -94,7 +94,7 @@ extension ValueBasedStack where T: Equatable {
     }
 }
 
-extension ValueBasedStack: CustomDebugStringConvertible {
+extension Stack: CustomDebugStringConvertible {
     public var debugDescription: String {
         switch self {
         case .empty: return "."

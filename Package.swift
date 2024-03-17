@@ -66,24 +66,12 @@ let package = Package(
             path: "Sources/Protocols/IteratableListProtocol"),
         // code
         .target(
-            name: "ValueBasedStack",
-            dependencies: []),
-        .testTarget(
-            name: "StackTests",
-            dependencies: ["ValueBasedStack"]),
-        .target(
             name: "BinarySearchTree",
             dependencies: ["TreeProtocol"],
             path: "Sources/ReferenceBasedBinarySearchTree"),
         .testTarget(
             name: "ReferenceBasedBinarySearchTreeTests",
             dependencies: ["BinarySearchTree"]),
-        .target(
-            name: "ValueBasedBinarySearchTree",
-            dependencies: ["ValueBasedStack"]),
-        .testTarget(
-            name: "ValueBasedBinarySearchTreeTests",
-            dependencies: ["ValueBasedStack","ValueBasedBinarySearchTree"]),
         .target(
             name: "AVLTree",
             dependencies: ["BinarySearchTree"]),
@@ -125,7 +113,24 @@ let package = Package(
             dependencies: ["IteratableListProtocol", "LinkedList"]),
         .testTarget(
             name: "QueueTests",
-            dependencies: ["Queue"])
+            dependencies: ["Queue"]),
+        // code - functional implementations
+        .target(
+            name: "ValueBasedStack",
+            dependencies: [],
+            path: "Sources/Functional/Stack"),
+        .testTarget(
+            name: "StackTests",
+            dependencies: ["ValueBasedStack"],
+            path: "Tests/Functional/StackTests"),
+        .target(
+            name: "ValueBasedBinarySearchTree",
+            dependencies: ["ValueBasedStack"],
+            path: "Sources/Functional/Tree"),
+        .testTarget(
+            name: "ValueBasedBinarySearchTreeTests",
+            dependencies: ["ValueBasedStack","ValueBasedBinarySearchTree"],
+            path: "Tests/Functional/ValueBasedBinarySearchTreeTests")
     ]
 )
 

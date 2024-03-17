@@ -18,11 +18,11 @@ import ValueBasedStack
  */
 /// An immutable Binary Search Tree (BST) using Enum value type. Each insertion or deletion will create a new BST.
 //public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable, BinarySearchTreeProtocol {
-public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
+public enum BinarySearchTree<T: Comparable>: Equatable {
     case empty
     case leaf(T)
     // use indirect keyword to tell compiler to allocate memory dynamically.
-    indirect case node(ValueBasedBinarySearchTree, T, ValueBasedBinarySearchTree)
+    indirect case node(BinarySearchTree, T, BinarySearchTree)
 
     public init() {
         self = .empty
@@ -75,7 +75,7 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
 
     // Get left branch of tree.
     // Performance: O(1)
-    public var left: ValueBasedBinarySearchTree? {
+    public var left: BinarySearchTree? {
         if case let .node(left,_,_) = self {
             if left == .empty { return nil }
             return left
@@ -85,7 +85,7 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
 
     // Get left branch of tree.
     // Performance: O(1)
-    public var right: ValueBasedBinarySearchTree? {
+    public var right: BinarySearchTree? {
         if case let .node(_,_,right) = self {
             if right == .empty { return nil }
             return right
@@ -146,7 +146,7 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
     // you need the parent of another node with the same value, use search to get the subtree
     // and pass in a node with distict values.
     // Performance: O(h), where h is height of tree
-    public func parent(of target: T) -> ValueBasedBinarySearchTree? {
+    public func parent(of target: T) -> BinarySearchTree? {
         var curr = self
         guard let root = root else { return nil }
         if target == root { return nil }
@@ -221,23 +221,23 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
 
     // Insert a branch to the existing tree.
     // Performance: O(n), since we need to build a new tree with all elements.
-    public func insert(_ node: ValueBasedBinarySearchTree) -> ValueBasedBinarySearchTree {
+    public func insert(_ node: BinarySearchTree) -> BinarySearchTree {
         let branch = node.toArray()
         var tree = self.toArray()
         tree.append(contentsOf: branch)
-        return ValueBasedBinarySearchTree.init(from: tree)
+        return BinarySearchTree.init(from: tree)
     }
 
     /*
      Insert a new value into the tree.
      */
     // Performance: runs in O(n) time, since every element must be inserted.
-    public func insert(_ newValue: T) -> ValueBasedBinarySearchTree {
+    public func insert(_ newValue: T) -> BinarySearchTree {
         switch self {
         case .empty:
             return .leaf(newValue)
         case .leaf(let value):
-            let leaf: ValueBasedBinarySearchTree = .leaf(newValue)
+            let leaf: BinarySearchTree = .leaf(newValue)
             if newValue < value {
                 return .node(leaf, value, .empty)
             } else {
@@ -259,7 +259,7 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
      */
     // Performance: runs in O(log n) time for average case, where n is the number of nodes. Runs in O(h) time,
     // where h is the height of the tree, for worst case (when tree is linear).
-    public func search(value x: T) -> ValueBasedBinarySearchTree? {
+    public func search(value x: T) -> BinarySearchTree? {
         switch self {
         case .empty:
             return nil
@@ -350,7 +350,7 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
 
     // Remove by node type. Calls through to remove by value routine, since we are not dealing with
     // reference types this is just a convenience wrapper.
-    public func remove(_ node: ValueBasedBinarySearchTree) -> ValueBasedBinarySearchTree {
+    public func remove(_ node: BinarySearchTree) -> BinarySearchTree {
         if let value = node.value {
             return remove(value)
         }
@@ -364,16 +364,16 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
     // Performance: O(n) to build traversal, then O(n)
     // Even using the standard algorithm for pruning and replacement, it would take an O(n) traversal to get parents.
     // This is on the order of twice as slow, but still O(n)
-    public func remove(_ target: T) -> ValueBasedBinarySearchTree {
+    public func remove(_ target: T) -> BinarySearchTree {
         if self.count == 1 {
-            return ValueBasedBinarySearchTree.empty
+            return BinarySearchTree.empty
         }
         if let _ = search(value: target) {
             // this works great - but costly because of both traversal to build array (O(n)) and rebuilding of tree O(n)
             var arr = self.toArray()
             let remIdx = arr.firstIndex(of: target)!
             arr.remove(at: remIdx)
-            return ValueBasedBinarySearchTree.init(from: arr)
+            return BinarySearchTree.init(from: arr)
         }
         return self
     }
@@ -381,8 +381,8 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
     // TODO: implement
     // randomize tree elements and rebuild in an effort to rebalance the tree. This is not guaranteed to give you
     // an optimally balanced tree, but will prune linear chains.
-    public func shake() -> ValueBasedBinarySearchTree {
-        return ValueBasedBinarySearchTree.init(from: self.toArray())
+    public func shake() -> BinarySearchTree {
+        return BinarySearchTree.init(from: self.toArray())
     }
 
     // Tree is balanced when left and right trees are at most one level different.
@@ -398,7 +398,7 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
 
 }
 
-extension ValueBasedBinarySearchTree: CustomDebugStringConvertible {
+extension BinarySearchTree: CustomDebugStringConvertible {
     public var debugDescription: String {
         switch self {
         case .empty: return "."

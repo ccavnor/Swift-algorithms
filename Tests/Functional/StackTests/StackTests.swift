@@ -11,8 +11,8 @@ import ValueBasedStack
 class StackTests: XCTestCase {
 
     let inserts: [Int] = [8,5,10,-1]
-    func makeStack() -> ValueBasedStack<Int> {
-        var stack: ValueBasedStack = ValueBasedStack<Int>()
+    func makeStack() -> Stack<Int> {
+        var stack: Stack = Stack<Int>()
         for i in inserts {
             stack = stack.push(i)
         }
@@ -20,7 +20,7 @@ class StackTests: XCTestCase {
     }
 
     func test_empty() {
-        var stack: ValueBasedStack = ValueBasedStack<Int>()
+        var stack: Stack = Stack<Int>()
         XCTAssertTrue(stack.isEmpty)
         XCTAssertEqual(0, stack.size)
     }
@@ -53,7 +53,7 @@ class StackTests: XCTestCase {
     }
 
     func test_ValueBasedStack_toArray() {
-        var stack: ValueBasedStack = ValueBasedStack<Int>()
+        var stack: Stack = Stack<Int>()
         XCTAssertEqual(stack.toArray, [])
         stack = makeStack()
         XCTAssertEqual(stack.toArray, [-1,10,5,8])

@@ -1,5 +1,5 @@
 //
-//  ValueBasedBinarySearchTreeTests.swift
+//  BinarySearchTreeTests.swift
 //  
 //
 //  Created by Christopher Charles Cavnor on 4/28/22.
@@ -13,8 +13,8 @@ import ValueBasedStack
 class ValueBasedBinarySearchTreeTest: XCTestCase {
     // creates tree of shape: (5  <- 8 -> (.  <- 10 -> 15))
     // where root is 8; nodes are 8, 10; and leafs are 5, 15
-    func makeTree() -> ValueBasedBinarySearchTree<Int> {
-        var tree = ValueBasedBinarySearchTree.leaf(8)
+    func makeTree() -> BinarySearchTree<Int> {
+        var tree = BinarySearchTree.leaf(8)
         tree = tree.insert(5)
         tree = tree.insert(10)
         tree = tree.insert(15)
@@ -45,23 +45,23 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
     }
 
     func test_init_from() {
-        var tree = ValueBasedBinarySearchTree.init(from: [1])
+        var tree = BinarySearchTree.init(from: [1])
         XCTAssertEqual(tree.root, 1)
-        tree = ValueBasedBinarySearchTree.init(from: [1,2])
+        tree = BinarySearchTree.init(from: [1,2])
         XCTAssertEqual(tree.root, 1)
-        tree = ValueBasedBinarySearchTree.init(from: [1,2,3])
+        tree = BinarySearchTree.init(from: [1,2,3])
         XCTAssertEqual(tree.root, 2)
-        tree = ValueBasedBinarySearchTree.init(from: [1,2,3,4,5,6,7,8,9,10,11,12,13])
+        tree = BinarySearchTree.init(from: [1,2,3,4,5,6,7,8,9,10,11,12,13])
         XCTAssertEqual(tree.root, 7)
-        tree = ValueBasedBinarySearchTree.init(from: [1,2,3,4,5,6,7,8,9,10,11,12,13].shuffled())
+        tree = BinarySearchTree.init(from: [1,2,3,4,5,6,7,8,9,10,11,12,13].shuffled())
         XCTAssertEqual(tree.root, 7)
     }
 
     func test_count() {
-        var tree = ValueBasedBinarySearchTree<Int>()
+        var tree = BinarySearchTree<Int>()
         tree = tree.insert(10)
-        var nodeL = ValueBasedBinarySearchTree<Int>()
-        var nodeR = ValueBasedBinarySearchTree<Int>()
+        var nodeL = BinarySearchTree<Int>()
+        var nodeR = BinarySearchTree<Int>()
 
         nodeL = nodeL.insert(5)
         nodeL = nodeL.insert(7)
@@ -110,7 +110,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
 
     // test isLeftChild, isRightChild
     func test_isChild() {
-        let tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
+        let tree = BinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
         print(">>> \(tree)")
         // root
         XCTAssertFalse(tree.isLeftChild(8))
@@ -205,7 +205,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
     }
 
     func test_root() {
-        var tree = ValueBasedBinarySearchTree<Int>.init()
+        var tree = BinarySearchTree<Int>.init()
         XCTAssertEqual(tree.root, nil)
         tree = makeTree()
         XCTAssertEqual(tree.root, 8)
@@ -220,25 +220,25 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
 
     func test_height() {
         // test with empty tree
-        var tree = ValueBasedBinarySearchTree<Int>.init()
+        var tree = BinarySearchTree<Int>.init()
         XCTAssertEqual(tree.height, 0)
         // test with only root
         tree = tree.insert(5)
         XCTAssertEqual(tree.height, 0)
         // test with full tree
-        tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree = BinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
         XCTAssertEqual(tree.left?.height, 1, "left branch without tree root node")
         XCTAssertEqual(tree.right?.height, 2, "right branch without tree root node")
         XCTAssertEqual(tree.height, 3, "longeset branch plus tree root node")
     }
 
     func test_depth() {
-        var tree = ValueBasedBinarySearchTree<Int>.init()
+        var tree = BinarySearchTree<Int>.init()
         // test with only root
         tree = tree.insert(5)
         XCTAssertEqual(tree.depth(of: 5), 0)
         // test with full tree
-        tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree = BinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
 
         // root
         XCTAssertEqual(tree.depth(of: 8), 0, "root of tree")
@@ -256,14 +256,14 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
 
     func test_search() {
         // test with empty tree
-        var tree = ValueBasedBinarySearchTree<Int>.init()
+        var tree = BinarySearchTree<Int>.init()
         XCTAssertEqual(tree.search(value: 0), nil)
         // test with only root
         tree = tree.insert(5)
         var result = tree.search(value: 5)
         XCTAssertEqual(result?.count, 1)
         // test with full tree
-        tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree = BinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
         XCTAssertEqual(tree.height, tree.search(value: tree.root!)?.height, "height of tree is equal to distance from root to lowest leaf")
         result = tree.search(value: 16)
         XCTAssertEqual(result?.height, 0, "16 is a leaf node")
@@ -273,7 +273,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
         result = tree.search(value: 99)
         XCTAssertEqual(result, nil, "value is not in tree")
         // test tree with duplicate node values
-        tree = ValueBasedBinarySearchTree(from: [8, 5, 10])
+        tree = BinarySearchTree(from: [8, 5, 10])
         result = tree.search(value: 5)
         XCTAssertEqual(result?.height, 0)
         tree = tree.insert(5)
@@ -284,32 +284,32 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
 
     func test_min() {
         // test with empty tree
-        var tree = ValueBasedBinarySearchTree<Int>()
+        var tree = BinarySearchTree<Int>()
         XCTAssertEqual(tree.minimum, nil)
         // test with only root
         tree = tree.insert(5)
         XCTAssertEqual(tree.minimum, 5)
-        tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree = BinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
         XCTAssertEqual(tree.minimum, 3)
     }
 
     func test_max() {
         // test with empty tree
-        var tree = ValueBasedBinarySearchTree<Int>()
+        var tree = BinarySearchTree<Int>()
         XCTAssertEqual(tree.maximum, nil)
         // test with only root
         tree = tree.insert(5)
         XCTAssertEqual(tree.maximum, 5)
-        tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
+        tree = BinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
         XCTAssertEqual(tree.maximum, 16)
     }
 
     func test_left() {
         // test with empty tree
-        var tree = ValueBasedBinarySearchTree<Int>()
+        var tree = BinarySearchTree<Int>()
         XCTAssertEqual(tree.left?.value, nil)
         // test with only root
-        tree = ValueBasedBinarySearchTree.leaf(50)
+        tree = BinarySearchTree.leaf(50)
         XCTAssertEqual(tree.left?.value, nil)
         tree = makeTree()
         XCTAssertEqual(tree.left?.value, 5, "left branch of tree")
@@ -317,70 +317,70 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
 
     func test_right() {
         // test with empty tree
-        var tree = ValueBasedBinarySearchTree<Int>()
+        var tree = BinarySearchTree<Int>()
         XCTAssertEqual(tree.right?.value, nil)
         // test with only root
-        tree = ValueBasedBinarySearchTree.leaf(50)
+        tree = BinarySearchTree.leaf(50)
         XCTAssertEqual(tree.right?.value, nil)
         // test with test tree
         tree = makeTree()
-        let match = ValueBasedBinarySearchTree.node(ValueBasedBinarySearchTree<_>.empty, 10, ValueBasedBinarySearchTree<_>.leaf(15))
+        let match = BinarySearchTree.node(BinarySearchTree<_>.empty, 10, BinarySearchTree<_>.leaf(15))
         XCTAssertEqual(tree.right, match, "right branch of tree")
     }
 
     func test_parents() {
-        var tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
+        var tree = BinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
         print(">>> \(tree)")
-        var accum = ValueBasedStack<Int>()
+        var accum = Stack<Int>()
         // root
         tree.parents(of: 8, using: { accum = accum.push($0) } )
         XCTAssertEqual(accum.toArray, [], "root has no parent")
         // leaves
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 3, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8,5], "parents of 3")
 
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 6, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8,5], "parents of 6")
 
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 9, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8,10], "parents of 9")
 
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 16, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8,10,12], "parents of 16")
 
         // parents
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 12, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8,10], "parents of 12")
 
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 10, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8], "parents of 10")
 
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 5, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8], "parents of 5")
 
         // test with tree that has duplicate values: only top level match is returned
-        tree = ValueBasedBinarySearchTree(from: [8, 5, 10])
+        tree = BinarySearchTree(from: [8, 5, 10])
 
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 5, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8], "parents of 5")
 
         tree = tree.insert(5)
-        accum = ValueBasedStack<Int>()
+        accum = Stack<Int>()
         tree.parents(of: 5, using: { accum = accum.push($0) })
         XCTAssertEqual(accum.toArray, [8], "parents of 5")
     }
 
     func test_parent_of() {
         // test with empty tree
-        var tree = ValueBasedBinarySearchTree<Int>()
+        var tree = BinarySearchTree<Int>()
         tree = tree.insert(8)
         tree = tree.insert(5)
         tree = tree.insert(10)
@@ -408,7 +408,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
 
 
     func testCreateFromArray() {
-        let tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
+        let tree = BinarySearchTree(from: [8, 5, 10, 3, 12, 9, 6, 16])
         XCTAssertEqual(tree.count, 8)
         XCTAssertEqual(tree.toArray(), [3, 5, 6, 8, 9, 10, 12, 16])
 
@@ -438,7 +438,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
     }
 
     func test_insert_duplicates() {
-        var tree = ValueBasedBinarySearchTree(from: [8, 5, 10])
+        var tree = BinarySearchTree(from: [8, 5, 10])
         tree = tree.insert(8)
         tree = tree.insert(5)
         tree = tree.insert(10)
@@ -447,7 +447,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
     }
 
     func test_remove_by_leaf() {
-        var tree = ValueBasedBinarySearchTree(from: [1])
+        var tree = BinarySearchTree(from: [1])
         tree = tree.remove(tree.root!)
         XCTAssertEqual(tree.count, 0)
         // remove leafs
@@ -496,7 +496,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
 
     func test_remove_child_left() {
         // build and confirm tree
-        var tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 4, 9])
+        var tree = BinarySearchTree(from: [8, 5, 10, 4, 9])
         var root = tree.search(value: 8)!
         let node4 = tree.search(value: 4)!
         let node5 = tree.search(value: 5)!
@@ -539,13 +539,13 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
 
     func test_remove_child_right() {
         // build and confirm tree
-        var tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 6, 11])
+        var tree = BinarySearchTree(from: [8, 5, 10, 6, 11])
         print(">>> \(tree)")
         XCTAssertTrue(tree.isBalanced())
         var node5 = tree.search(value: 5)!
         var node6 = tree.search(value: 6)!
         var node8 = tree.search(value: 8)!
-        var node10: ValueBasedBinarySearchTree? = tree.search(value: 10)!
+        var node10: BinarySearchTree? = tree.search(value: 10)!
         var node11 = tree.search(value: 11)!
         XCTAssertEqual(tree.count, 5)
         XCTAssertEqual(tree.toArray(), [5, 6, 8, 10, 11])
@@ -575,7 +575,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
     }
 
       func test_remove_children() {
-        var tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 4, 6, 9, 11])
+        var tree = BinarySearchTree(from: [8, 5, 10, 4, 6, 9, 11])
           print(">>> \(tree)")
 
           XCTAssertTrue(tree.isBalanced())
@@ -678,7 +678,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
       }
 
       func test_remove_child() {
-        var tree = ValueBasedBinarySearchTree(from: [8, 5, 10, 4, 9, 20, 11, 15, 13])
+        var tree = BinarySearchTree(from: [8, 5, 10, 4, 9, 20, 11, 15, 13])
           print(">>> \(tree)")
           XCTAssertTrue(tree.isBalanced())
           XCTAssertEqual(tree.toArray(), [4, 5, 8, 9, 10, 11, 13, 15, 20])
@@ -767,7 +767,7 @@ class ValueBasedBinarySearchTreeTest: XCTestCase {
       }
 
     func test_shake() {
-        var tree = ValueBasedBinarySearchTree<Int>()
+        var tree = BinarySearchTree<Int>()
         tree = tree.insert(8)
         tree = tree.insert(9)
         tree = tree.insert(10)
