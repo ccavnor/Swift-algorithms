@@ -96,7 +96,7 @@ open class IntervalTree<T: IntervalTreeValueP>: AVLTree<Interval<T>> {
         assert(root!.isRoot)
     }
 
-    required public init(value: Interval<T>) {
+    override public init(value: Interval<T>) {
         super.init(value: value)
         assert(nodeCount == 1)
         assert(root!.isRoot)

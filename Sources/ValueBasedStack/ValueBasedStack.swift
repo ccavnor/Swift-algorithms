@@ -1,10 +1,12 @@
 //
-//  File.swift
-//  
+//  ValueBasedStack.swift
+//
 //
 //  Created by Christopher Charles Cavnor on 5/6/22.
 //
 
+/// A Stack is a last-in-first-out (LIFO) data structure. This is a value-based implementation using an Enum as a container.
+/// This implementation is purely functional. All of its operations involve traversals over a list of nodes and run in O(n) time.
 public enum ValueBasedStack<T: Comparable> {
     case empty
     case node(T)
@@ -14,7 +16,12 @@ public enum ValueBasedStack<T: Comparable> {
         self = .empty
     }
 
-    /* How many nodes are in this stack. Performance: O(n). */
+    /// Check if stack has any elements.
+    public var isEmpty: Bool {
+        return size == 0
+    }
+
+    /// How many nodes are in this stack.
     public var size: Int {
         switch self {
         case .empty: return 0
@@ -23,22 +30,23 @@ public enum ValueBasedStack<T: Comparable> {
         }
     }
 
+    /// Add a new element on the stack.
+    /// Recursively calls itself to effectively reverse order of addition.
     public func push(_ element: T) -> ValueBasedStack {
         switch self {
         case .empty:
             return .node(element)
         case .node:
             return .list(element, self)
-        case let .list(n,ls):
+        case let .list(n, ls):
             return .list(element, ls.push(n))
         }
     }
 
-    // Returns an optional tuple of two elements:
-    // - the first is the popped value
-    // - the second is the rest of the list (to maintain )
-    // If you throw away the second element of the tuple (the rest of the stack) rather than using it as the
-    // new (post-popped) stack, then this func is essentially a peek instead of a pop.
+    /// Retrieve the last added element.
+    /// Returns an optional tuple of two elements:
+    /// - the first is the popped value
+    /// - the second is the rest of the list (to maintain )
     public func pop() -> (T,ValueBasedStack)? {
         if case let .list(v, rest) = self {
             return (v, rest)
@@ -49,19 +57,13 @@ public enum ValueBasedStack<T: Comparable> {
         return nil
     }
 
-    // get the first added element (ie. the last element to be popped)
-    public func first() -> T? {
-        var temp = self
-        var first: T?
-        while case let .list(l, ls) = temp {
-            (first, temp) = (l, ls)
-        }
-        if case let .node(v) = temp {
-            first = v
-        }
-        return first
+    /// Get the value of the next element to be popped.
+    public func peek() -> (T)? {
+        let (v, _) = pop()!
+        return v
     }
-    
+
+    /// get an array of the stack elements, in their popped order.
     public var toArray: [T] {
         var stack = self
         var arr = [T]()
@@ -71,7 +73,28 @@ public enum ValueBasedStack<T: Comparable> {
         }
         return arr
     }
+}
 
+extension ValueBasedStack where T: Equatable {
+
+    /// Check if an element exists in the Queue. This will take O(n) time.
+    ///
+    /// - Parameters:
+    ///   - element: The element to check for
+    /// - Returns: True if the element exists in the Queue, false otherwise.
+    public func contains(_ element: T) -> Bool {
+        var stack = self
+        while let (node, rest) = stack.pop() {
+            stack = rest
+            if (node == element) {
+                return true
+            }
+        }
+        return false
+    }
+}
+
+extension ValueBasedStack: CustomDebugStringConvertible {
     public var debugDescription: String {
         switch self {
         case .empty: return "."
@@ -80,26 +103,4 @@ public enum ValueBasedStack<T: Comparable> {
             return "\(value) -> \(list.debugDescription)"
         }
     }
-
-}
-
-extension ValueBasedStack: CustomDebugStringConvertible {
-//    public var toArray: [T] {
-//        var stack = self
-//        var arr = [T]()
-//        while let (node, rest) = stack.pop() {
-//            arr.append(node)
-//            stack = rest
-//        }
-//        return arr
-//    }
-//
-//    public var debugDescription: String {
-//        switch self {
-//        case .empty: return "."
-//        case .node(let value): return "\(value)"
-//        case .list(let value, let list):
-//            return "\(value) -> \(list.debugDescription)"
-//        }
-//    }
 }

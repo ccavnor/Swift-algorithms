@@ -10,35 +10,46 @@ import ValueBasedStack
 
 class StackTests: XCTestCase {
 
+    let inserts: [Int] = [8,5,10,-1]
     func makeStack() -> ValueBasedStack<Int> {
         var stack: ValueBasedStack = ValueBasedStack<Int>()
-        stack = stack.push(8)
-        stack = stack.push(5)
-        stack = stack.push(10)
-        stack = stack.push(-1)
+        for i in inserts {
+            stack = stack.push(i)
+        }
         return stack
     }
 
-    func test_ValueBasedStack_push_pop() {
+    func test_empty() {
+        var stack: ValueBasedStack = ValueBasedStack<Int>()
+        XCTAssertTrue(stack.isEmpty)
+        XCTAssertEqual(0, stack.size)
+    }
+
+    func test_ValueBasedStack_push_pop_peek() {
         var stack = makeStack()
         print(">>> \(stack)")
         XCTAssertEqual(4, stack.size)
 
-        // pop returns the popped element and the rest of the stack
-        while let (element, rest) = stack.pop() {
-            print(">>> next is \(element)")
+        for i in inserts.reversed() {
+            XCTAssertEqual(i, stack.peek())
+            // pop returns the popped element and the rest of the stack
+            var (element, rest) = stack.pop()!
+            print(">>> next is \(element), rest is \(rest)")
+            XCTAssertEqual(i, element)
             stack = rest
         }
-        XCTAssertEqual(0, stack.size, "stack is now empty")
+
+        // empty
+        XCTAssertTrue(stack.isEmpty)
+        XCTAssertEqual(0, stack.size)
     }
 
-    func test_ValueBasedStack_first() {
-        let stack = makeStack()
-        XCTAssertEqual(4, stack.size)
-        // get the first inserted element
-        let first = stack.first()
-        XCTAssertEqual(8, first, "first element in stack")
-        XCTAssertEqual(4, stack.size, "stack size not changed")
+    func test_contains() {
+        var stack = makeStack()
+        for i in inserts {
+            XCTAssertTrue(stack.contains(i))
+        }
+        XCTAssertFalse(stack.contains(100))
     }
 
     func test_ValueBasedStack_toArray() {

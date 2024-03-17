@@ -11,9 +11,13 @@ let package = Package(
         .library(name: "ValueBasedStack", targets: ["ValueBasedStack"]),
         .library(name: "ReferenceBasedBinarySearchTree",targets: ["BinarySearchTree"]),
         .library(name: "ValueBasedBinarySearchTree",targets: ["ValueBasedBinarySearchTree"]),
+        .library(name: "LinkedList", targets: ["LinkedList"]),
         .library(name: "IntervalTree", targets: ["IntervalTree"]),
         .library(name: "TimeIntervalTree", targets: ["TimeIntervalTree"]),
         .library(name: "AVLTree", targets: ["AVLTree"]),
+        .library(name: "Trie", targets: ["Trie"]),
+        .library(name: "RETE", targets: ["RETE"]),
+        .library(name: "Queue", targets: ["Queue"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -52,6 +56,14 @@ let package = Package(
             name: "TreeProtocol",
             dependencies: [],
             path: "Sources/Protocols/TreeProtocol"),
+        .target(
+            name: "TrieProtocol",
+            dependencies: [],
+            path: "Sources/Protocols/TrieProtocol"),
+        .target(
+            name: "IteratableListProtocol",
+            dependencies: [],
+            path: "Sources/Protocols/IteratableListProtocol"),
         // code
         .target(
             name: "ValueBasedStack",
@@ -90,6 +102,30 @@ let package = Package(
         .testTarget(
             name: "TimeIntervalTreeTests",
             dependencies: ["TimeIntervalTree", "DateHelper"]),
+        .target(
+            name: "LinkedList",
+            dependencies: []),
+        .testTarget(
+            name: "LinkedListTests",
+            dependencies: ["LinkedList"]),
+        .target(
+            name: "Trie",
+            dependencies: ["TrieProtocol"]),
+        .testTarget(
+            name: "TrieTests",
+            dependencies: ["Trie"]),
+        .target(
+            name: "RETE",
+            dependencies: []),
+        .testTarget(
+            name: "ReteTests",
+            dependencies: ["RETE"]),
+        .target(
+            name: "Queue",
+            dependencies: ["IteratableListProtocol", "LinkedList"]),
+        .testTarget(
+            name: "QueueTests",
+            dependencies: ["Queue"])
     ]
 )
 

@@ -106,7 +106,6 @@ open class BinarySearchTreeNode<T: TreeValueP>: TreeNodeP where T: Comparable {
 /// A binary search tree. Each node stores a value and up to two children. This tree ignores any inserted duplicate elements.
 /// This tree does not automatically balance itself. To make sure it is balanced, you should insert new values in
 /// randomized order, not in sorted order.
-//open class BinarySearchTree<T: AdditiveArithmetic & Comparable>: TreeProtocol {
 open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
     private var _root: BinarySearchTreeNode<T>?
     public var nodeCount: Int = 0
@@ -116,7 +115,8 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         set { _root = newValue }
     }
 
-    required public init(value: T) {
+    //required public init(value: T) {
+    public init(value: T) {
         _root = BinarySearchTreeNode<T>(value: value)
         _root?.isRoot = true
         nodeCount += 1
@@ -343,7 +343,11 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         completion(node.value)
     }
 
-    /// Performs an in-order traversal, applying the given map function, and collects the values in an array.
+    /// Performs an in-order traversal, applying the given map function, and collects the values in an array:
+    /// (BinarySearchTree) -> BinarySearchTree) and returns [BinarySearchTreeNode<T>]
+    /// - Parameters:
+    ///   - formula: map takes function: (BinarySearchTree) -> BinarySearchTree)
+    /// - Returns: [BinarySearchTreeNode<T>] of nodes after applying map function
     open func map(_ formula: (T) -> T) -> [T] {
         var result = [T]()
         guard let root = self.root else {
@@ -353,6 +357,12 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         return result
     }
 
+    /// Recursively performs an in-order traversal, applying the given map function, and collects the values in an array.
+    /// - Parameters:
+    ///   - node: the node in which to begin traversal
+    ///   - apply: map  function: ((BinarySearchTree) -> BinarySearchTree) -> [BinarySearchTreeNode<T>]
+    ///   - result: inout reference to the collector
+    /// - Returns: (implicitly returns result as inout reference)
     private func map(node: BinarySearchTreeNode<T>,
                      apply: ((T) -> T),
                      result: inout [T]) {
@@ -410,7 +420,7 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
                                           parent: BinarySearchTreeNode<T>?) -> BinarySearchTreeNode<T> {
         var insertionNode = node
         let parent = parent ?? root
-        let nodeType = type(of: node)
+        let nodeType = type(of: node) // for subclassing
 
         if node.value < tree.value {
             if let left = tree.left {
@@ -419,7 +429,6 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
                        parent: left)
             } else {
                 let temp = nodeType.init(value: node.value)
-                //let temp = BinarySearchTreeNode(value: node.value)
                 tree.left = temp
                 temp.parent = parent
                 insertionNode = temp
@@ -432,7 +441,6 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
                        parent: right)
             } else {
                 let temp = nodeType.init(value: node.value)
-                //let temp = BinarySearchTreeNode(value: node.value)
                 tree.right = temp
                 temp.parent = parent
                 insertionNode = temp
@@ -614,11 +622,9 @@ extension BinarySearchTree: CustomStringConvertible {
             if node.isRoot {
                 print("\(node.value):\(height(node: node))", terminator: "")
             } else {
-                if node < node.parent! {
-                    //print("\(node.value) < \(node.parent?.value)")
+                if node.isLeftChild {
                     print("\(node.value):\(height(node: node))", terminator: " L")
                 } else {
-                    //print("\(node.value) > \(node.parent?.value)")
                     print("\(node.value):\(height(node: node))", terminator: " R")
                 }
             }

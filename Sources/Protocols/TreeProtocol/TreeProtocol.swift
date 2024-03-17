@@ -28,92 +28,16 @@ public enum TreeError: Error {
 }
 
 // MARK: Binary Search Tree Protocol
-public protocol TreeValueP: AdditiveArithmetic & Comparable {
+public protocol TreeValueP: Comparable {
     associatedtype NodeValue: TreeValueP
 }
 
-// MARK: Interval
-public struct Interval<T: IntervalTreeValueP>: IntervalTreeValueP {
-    public typealias NodeValue = T
-
-    public var start: T
-    public var end: T
-
-    public init(start: T, end: T) throws {
-        if end < start { throw TreeError.invalidInterval }
-        self.start = start
-        self.end = end
-    }
+// make String conform to TreeValueP
+extension String: TreeValueP {
+    public typealias NodeValue = String
 }
-
-extension Interval: Comparable {
-    /// == (equality)
-    /// check that two intervals begin and end at same values
-    public static func == (lhs: Interval<T>, rhs: Interval<T>) -> Bool {
-        return (lhs.start == rhs.start) && (lhs.end == rhs.end)
-    }
-
-    /// != (non-equality)
-    /// check that two intervals do not overlap
-    public static func != (lhs: Interval<T>, rhs: Interval<T>) -> Bool {
-        return !(lhs == rhs)
-    }
-
-    /// > (gt)
-    /// true when a.start > b.start or a.start == b.start and a.end > b.end
-    public static func > (lhs: Interval, rhs: Interval) -> Bool {
-        if lhs.start > rhs.start { return true }
-        else if ((lhs.start == rhs.start) && (lhs.end > rhs.end)) { return true }
-        return false
-    }
-
-    /// >=  (gte)
-    /// true when a.start > b.start or a.start == b.start but a.end > b.end or a == b
-    public static func >= (lhs: Interval, rhs: Interval) -> Bool {
-        if lhs == rhs { return true }
-        else if lhs.start == rhs.start { return lhs.end > rhs.end }
-        else if (lhs.start >= rhs.start) { return true }
-        return false
-    }
-
-    /// < (lt)
-    /// true when a.start < b.start or a.start == b.start and a.end < b.end
-    public static func < (lhs: Interval, rhs: Interval) -> Bool {
-        if lhs.start < rhs.start { return true }
-        else if ((lhs.start == rhs.start) && (lhs.end < rhs.end)) { return true }
-        return false
-    }
-
-    /// <= (lte)
-    /// true when a.start < b.start or a.start == b.start but a.end < b.end or a == b
-    public static func <= (lhs: Interval, rhs: Interval) -> Bool {
-        if lhs == rhs { return true }
-        else if lhs.start == rhs.start { return lhs.end < rhs.end }
-        else if (lhs.start <= rhs.start) { return true }
-        return false
-    }
-}
-
-extension Interval: AdditiveArithmetic {
-    public static var zero: Interval<T> {
-        return try! self.init(start: 0 as! T, end: 0 as! T)
-    }
-
-    public static func - (lhs: Interval<T>, rhs: Interval<T>) -> Interval<T> {
-        do {
-            return try Self.init(start: (lhs.start - rhs.start), end: (lhs.end - rhs.end))
-        } catch {
-            return zero
-        }
-    }
-
-    public static func + (lhs: Interval<T>, rhs: Interval<T>) -> Interval<T> {
-        do {
-            return try Self.init(start: (lhs.start + rhs.start), end: (lhs.end + rhs.end))
-        } catch {
-            return zero
-        }
-    }
+extension Character: TreeValueP {
+    public typealias NodeValue = Character
 }
 
 public protocol TreeNodeP: AnyObject, Comparable {
@@ -171,15 +95,100 @@ public protocol TreeP: AnyObject {
 }
 
 // MARK: Interval Tree Protocol
-public protocol IntervalTreeValueP: TreeValueP {
+
+// MARK: Interval
+public struct Interval<T: IntervalTreeValueP>: IntervalTreeValueP {
+    public typealias NodeValue = T
+
+    public var start: T
+    public var end: T
+
+    public init(start: T, end: T) throws {
+        if end < start { throw TreeError.invalidInterval }
+        self.start = start
+        self.end = end
+    }
+}
+
+extension Interval: Comparable & AdditiveArithmetic {
+    public static var zero: Interval<T> {
+        return try! self.init(start: 0 as! T, end: 0 as! T)
+    }
+
+    public static func - (lhs: Interval<T>, rhs: Interval<T>) -> Interval<T> {
+        do {
+            return try Self.init(start: (lhs.start - rhs.start), end: (lhs.end - rhs.end))
+        } catch {
+            return zero
+        }
+    }
+
+    public static func + (lhs: Interval<T>, rhs: Interval<T>) -> Interval<T> {
+        do {
+            return try Self.init(start: (lhs.start + rhs.start), end: (lhs.end + rhs.end))
+        } catch {
+            return zero
+        }
+    }
+
+    /// == (equality)
+    /// check that two intervals begin and end at same values
+    public static func == (lhs: Interval<T>, rhs: Interval<T>) -> Bool {
+        return (lhs.start == rhs.start) && (lhs.end == rhs.end)
+    }
+
+    /// != (non-equality)
+    /// check that two intervals do not overlap
+    public static func != (lhs: Interval<T>, rhs: Interval<T>) -> Bool {
+        return !(lhs == rhs)
+    }
+
+    /// > (gt)
+    /// true when a.start > b.start or a.start == b.start and a.end > b.end
+    public static func > (lhs: Interval, rhs: Interval) -> Bool {
+        if lhs.start > rhs.start { return true }
+        else if ((lhs.start == rhs.start) && (lhs.end > rhs.end)) { return true }
+        return false
+    }
+
+    /// >=  (gte)
+    /// true when a.start > b.start or a.start == b.start but a.end > b.end or a == b
+    public static func >= (lhs: Interval, rhs: Interval) -> Bool {
+        if lhs == rhs { return true }
+        else if lhs.start == rhs.start { return lhs.end > rhs.end }
+        else if (lhs.start >= rhs.start) { return true }
+        return false
+    }
+
+    /// < (lt)
+    /// true when a.start < b.start or a.start == b.start and a.end < b.end
+    public static func < (lhs: Interval, rhs: Interval) -> Bool {
+        if lhs.start < rhs.start { return true }
+        else if ((lhs.start == rhs.start) && (lhs.end < rhs.end)) { return true }
+        return false
+    }
+
+    /// <= (lte)
+    /// true when a.start < b.start or a.start == b.start but a.end < b.end or a == b
+    public static func <= (lhs: Interval, rhs: Interval) -> Bool {
+        if lhs == rhs { return true }
+        else if lhs.start == rhs.start { return lhs.end < rhs.end }
+        else if (lhs.start <= rhs.start) { return true }
+        return false
+    }
+}
+
+/// A TreeValueP that allows for AdditiveArithmetic operations
+public protocol IntervalTreeValueP: TreeValueP & AdditiveArithmetic where NodeValue: TreeValueP {
     var start: NodeValue { get set }
     var end: NodeValue { get set }
 }
 
 public protocol IntervalTreeNodeP: TreeNodeP {}
 
+// MARK: IntervalTreeValueP conformance
 
-extension Int: TreeValueP & IntervalTreeValueP {
+extension Int: IntervalTreeValueP {
     public typealias NodeValue = Int
 
     public var start: Int {
@@ -201,7 +210,7 @@ extension Int: TreeValueP & IntervalTreeValueP {
     }
 }
 
-extension UInt: TreeValueP & IntervalTreeValueP {
+extension UInt: IntervalTreeValueP {
     public typealias NodeValue = UInt
     public var start: UInt {
         get {
@@ -221,7 +230,8 @@ extension UInt: TreeValueP & IntervalTreeValueP {
         }
     }
 }
-extension Float: TreeValueP & IntervalTreeValueP {
+
+extension Float: IntervalTreeValueP {
     public typealias NodeValue = Float
     public var start: Float {
         get {
@@ -241,7 +251,8 @@ extension Float: TreeValueP & IntervalTreeValueP {
         }
     }
 }
-extension Double: TreeValueP & IntervalTreeValueP {
+
+extension Double: IntervalTreeValueP {
     public typealias NodeValue = Double
     public var start: Double {
         get {

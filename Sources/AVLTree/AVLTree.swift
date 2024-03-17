@@ -32,7 +32,8 @@ open class AVLTree<T: TreeValueP>: BinarySearchTree<T> {
         set { _root = newValue as? AVLTreeNode<T> }
     }
 
-    required public init(value: T) {
+    //required public init(value: T) {
+    override public init(value: T) {
         super.init(value: value)
         _root = AVLTreeNode<T>(value: value)
         _root?.isRoot = true

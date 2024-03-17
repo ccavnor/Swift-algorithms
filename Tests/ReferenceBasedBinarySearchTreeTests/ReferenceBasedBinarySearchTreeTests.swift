@@ -126,6 +126,7 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
     func test_hasAnyChild_hasBothChildren() {
         let tree = BinarySearchTree(array: [8, 5, 10, 3, 12, 9, 6, 16])
         tree.draw()
+        tree.display(node: tree.root!)
 
         let r = tree.root!
         XCTAssertTrue(r.hasAnyChild) //8
@@ -192,7 +193,7 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
     //=======================================
     // BinarySearchTree
     //=======================================
-    func testInsert() {
+    func testInsertNumber() {
         let tree = BinarySearchTree(value: 8)
         try! tree.insert(node: BinarySearchTreeNode(value: 3))
         try! tree.insert(node: BinarySearchTreeNode(value: 9))
@@ -241,6 +242,48 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
         XCTAssertNil(node10.left)
         XCTAssertNil(node10.right)
         XCTAssertTrue(node10.parent === node9)
+    }
+
+    func testInsertString() {
+        let tree = BinarySearchTree(value: "c")
+        try! tree.insert(node: BinarySearchTreeNode(value: "a"))
+        try! tree.insert(node: BinarySearchTreeNode(value: "t"))
+        try! tree.insert(node: BinarySearchTreeNode(value: "z"))
+        try! tree.insert(node: BinarySearchTreeNode(value: "o")) // duplicate value should be ignored
+        tree.draw()
+
+        XCTAssertEqual(tree.size, 5)
+        XCTAssertEqual(tree.height(), 3) // left is heavier than right
+
+        // root
+        let root = tree.root!
+        XCTAssertTrue(root.isRoot)
+        XCTAssertEqual(root.value, "c")
+
+        // left subtree
+        let node_a = root.left
+        XCTAssertEqual(node_a?.value, "a")
+        XCTAssertNil(node_a?.left?.value)
+        XCTAssertNil(node_a?.right?.value)
+        XCTAssertTrue(node_a?.parent === root)
+
+        let node_t = root.right
+        XCTAssertEqual(node_t?.value, "t")
+        XCTAssertEqual(node_t?.left?.value, "o")
+        XCTAssertEqual(node_t?.right?.value, "z")
+        XCTAssertTrue(node_t?.parent === root)
+
+        let node_o = root.right!.left
+        XCTAssertEqual(node_o?.value, "o")
+        XCTAssertNil(node_o?.left)
+        XCTAssertNil(node_o?.right)
+        XCTAssertTrue(node_o?.parent === node_t)
+
+        let node_z = root.right!.right
+        XCTAssertEqual(node_z?.value, "z")
+        XCTAssertNil(node_z?.left)
+        XCTAssertNil(node_z?.right)
+        XCTAssertTrue(node_z?.parent === node_t)
     }
 
     func testCreateFromArray() {
@@ -676,24 +719,6 @@ class ReferenceBasedBinarySearchTreeTest: XCTestCase {
 
     // map takes function: (BinarySearchTree) -> BinarySearchTree) and returns [BinarySearchTreeNode<T>]
     func testMap() {
-        let tree = BinarySearchTree(array: [3, 1, 2, 5, 4])
-        tree.draw()
-        // first, lets just pass through the node values
-        let r0 = tree.map( { $0 } )
-        XCTAssertEqual(r0, [1,2,3,4,5])
-        // now let's apply a mutation function
-        let r1 = tree.map( { $0 * 2} )
-        XCTAssertEqual(r1, [2,4,6,8,10])
-        // make sure that tree was changed too
-        XCTAssertEqual(6, tree.root?.value)
-        XCTAssertEqual(2, tree.root?.left?.value)
-        XCTAssertEqual(4, tree.root?.left?.right?.value)
-        XCTAssertEqual(10, tree.root?.right?.value)
-        XCTAssertEqual(8, tree.root?.right?.left?.value)
-    }
-
-    // flatMap takes function: (BinarySearchTree) -> BinarySearchTree) and returns [BinarySearchTreeNode<T>]
-    func testFlatMap() {
         let tree = BinarySearchTree(array: [3, 1, 2, 5, 4])
         tree.draw()
         // first, lets just pass through the node values

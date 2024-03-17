@@ -63,8 +63,7 @@ public enum ValueBasedBinarySearchTree<T: Comparable>: Equatable {
     // Performance: O(n)
     public func toArray() -> [T] {
         var collect: [T] = [T]()
-        //self.traverseInOrder(process: { collect.append($0) } )
-        self.traversePreOrder(process: { collect.append($0) } )
+        self.traverseInOrder(process: { collect.append($0) } )
         return collect
     }
 
