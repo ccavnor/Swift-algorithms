@@ -118,7 +118,6 @@ open class BinarySearchTree<T: TreeValueP>: TreeP where T: Comparable {
         set { _root = newValue }
     }
 
-    //required public init(value: T) {
     public init(value: T) {
         _root = BinarySearchTreeNode<T>(value: value)
         _root?.isRoot = true

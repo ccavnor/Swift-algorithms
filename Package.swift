@@ -17,6 +17,7 @@ let package = Package(
         //.library(name: "RETE", targets: ["RETE"]),
         .library(name: "Queue", targets: ["Queue"]),
         .library(name: "Stack", targets: ["Stack"]),
+        .library(name: "Heap", targets: ["Heap"]),
         // functional code
         .library(name: "ValueBasedStack", targets: ["ValueBasedStack"]),
         .library(name: "ValueBasedBinarySearchTree",targets: ["ValueBasedBinarySearchTree"]),
@@ -125,6 +126,12 @@ let package = Package(
         .testTarget(
             name: "StackTests",
             dependencies: ["Stack"]),
+        .target(
+            name: "Heap",
+            dependencies: ["IteratableListProtocol"]),
+        .testTarget(
+            name: "HeapTests",
+            dependencies: ["Heap"]),
         // code - functional implementations
         .target(
             name: "ValueBasedStack",

@@ -280,7 +280,7 @@ public final class LinkedList<T> where T: Comparable {
         return node.value
     }
 
-    /// Function to remove the last node/value in the list. Crashes if the list is empty
+    /// Function to remove the last node/value in the list. 
     ///
     /// - Returns: The data value contained in the deleted node.
     /// - Complexity: O(1)
