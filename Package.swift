@@ -5,7 +5,7 @@ import PackageDescription
 
 
 let package = Package(
-    name: "Algorithms",
+    name: "ccavnor-swift-collections",
     // Products define the executables and libraries a package produces, and make them visible to other packages.
     products: [
         .library(name: "BinarySearchTree",targets: ["BinarySearchTree"]),
@@ -14,7 +14,6 @@ let package = Package(
         .library(name: "TimeIntervalTree", targets: ["TimeIntervalTree"]),
         .library(name: "AVLTree", targets: ["AVLTree"]),
         .library(name: "Trie", targets: ["Trie"]),
-        //.library(name: "RETE", targets: ["RETE"]),
         .library(name: "Queue", targets: ["Queue"]),
         .library(name: "Stack", targets: ["Stack"]),
         .library(name: "Heap", targets: ["Heap"]),
@@ -117,12 +116,6 @@ let package = Package(
         .testTarget(
             name: "TrieTests",
             dependencies: ["Trie"]),
-//        .target(
-//            name: "RETE",
-//            dependencies: []),
-//        .testTarget(
-//            name: "ReteTests",
-//            dependencies: ["RETE"]),
         .target(
             name: "Queue",
             dependencies: ["IteratableListProtocol", "LinkedList"]),
