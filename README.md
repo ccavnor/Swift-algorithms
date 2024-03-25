@@ -54,5 +54,5 @@ See individual target documents in this package via the following links:
 
 > [!TIP]
 > Other sources for Swift collections (data structures and algoritms) can be found here:
-> [The Swift Algorithm Club](https://github.com/kodecocodes/swift-algorithm-club/tree/master)
-> [Apple's Swift Collections ](https://github.com/apple/swift-collections)
+> - [The Swift Algorithm Club](https://github.com/kodecocodes/swift-algorithm-club/tree/master)
+> - [Apple's Swift Collections ](https://github.com/apple/swift-collections)
