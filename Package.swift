@@ -39,9 +39,18 @@ let package = Package(
         //    https://github.com/apple/swift-docc/issues/255
         // But I provided a shell script called scripts/docAll.sh that will build each target
         // and extract out the required directories into a common doc directory called "allDocs".
-        // The only manual step to be done is to copy these directories into the corresponding
-        // directories of a single target (you can build it using scripts/buildGithubPagesDocs.sh)
+        //
+        // Run a second script (scripts/buildGithubPagesDocs.sh) against any single target in this
+        // Swift Package Manager manifest and the required files will be generated for Github Pages.
+        // This will generate a directory called "docs" in the current working directory. This "docs"
+        // directory is what is checked into GitHub. GitHub pages automatically picks it up as the
+        // sources for the documentation for each target.
+        // Manually copy the files in directory allDocs/data/documentation to docs/data/documentation.
+        // Manually copy the files in directory allDocs/documentation to docs/documentation.
+        //
+        // Delete the allDocs archive, it is no longer needed. Check in the docs directory to GitHub.
 
+        // For linking to the GitHub Pages documentation targets (from the project README or for external links):
         // The documentation for each target is accessed via the following link
         // (NOTE the ./documentation/<target-name> subdir):
         //   https://<username>.github.io/<repository-name>/documentation/<target-name>

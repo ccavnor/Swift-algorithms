@@ -2,7 +2,19 @@
 
 # This script just calls buildGithubPagesDocs.sh for each target
 
-allTargets=('ValueBasedStack' 'BinarySearchTree' 'ValueBasedBinarySearchTree' 'IntervalTree' 'AVLTree' 'TreeProtocol' 'TimeIntervalTree')
+allTargets=('ValueBasedStack'
+            'BinarySearchTree'
+            'ValueBasedBinarySearchTree'
+            'IntervalTree'
+            'AVLTree'
+            'TreeProtocol'
+            'IteratableListProtocol'
+            'TimeIntervalTree'
+            'LinkedList'
+            'Trie'
+            'Queue'
+            'Stack'
+            'Heap')
 
 pushd ../
 # make a common docs folder named 'allDocs'
