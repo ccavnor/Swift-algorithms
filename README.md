@@ -9,13 +9,13 @@ See individual target documents in this package via the following links:
 - [Binary Search Tree](https://ccavnor.github.io/Swift-algorithms/documentation/valuebasedbinarysearchtree/)
 
 ## Bags
-- [Protocol for Bags](https://ccavnor.github.io/Swift-algorithms/documentation/IteratableListProtocol/)
-- [LinkedList](https://ccavnor.github.io/Swift-algorithms/documentation/LinkedList/)
-- [Stack](https://ccavnor.github.io/Swift-algorithms/documentation/Stack/)
-- [Heap](https://ccavnor.github.io/Swift-algorithms/documentation/Heap/)
+- [Protocol for Bags](https://ccavnor.github.io/Swift-algorithms/documentation/iteratablelistprotocol/)
+- [LinkedList](https://ccavnor.github.io/Swift-algorithms/documentation/linkedlist/)
+- [Stack](https://ccavnor.github.io/Swift-algorithms/documentation/stack/)
+- [Heap](https://ccavnor.github.io/Swift-algorithms/documentation/heap/)
 
 ## Trie
-- [Trie](https://ccavnor.github.io/Swift-algorithms/documentation/Trie/)
+- [Trie](https://ccavnor.github.io/Swift-algorithms/documentation/trie/)
 
 ## Binary Search Trees
 - [Protocols for Binary Search Tree and descendents](https://ccavnor.github.io/Swift-algorithms/documentation/treeprotocol/)
