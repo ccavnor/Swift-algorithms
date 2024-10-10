@@ -66,6 +66,20 @@ public struct BiMap<H:Hashable,T:Hashable> {
         mutating get { return forward[key] }
         set { forward[key]  = newValue }
     }
+//    subscript(_ key:H) -> [T?] {
+//        mutating get {
+//            var items = [T?]()
+//            for key in forward.keys {
+//                items.append(forward[key])
+//            }
+//            return items
+//        }
+//        set {
+//            if newValue.count == 1 {
+//                forward[key]  = newValue[0]
+//            }
+//        }
+//    }
 
     subscript(key key:H) -> T? {
         mutating get { return forward[key] }

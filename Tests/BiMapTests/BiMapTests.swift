@@ -104,14 +104,22 @@ final class BiMapTests: XCTestCase {
 
         // set
         bim["D"] = 4
+        XCTAssertEqual(bim["D"], 4)
         XCTAssertEqual(bim[4], "D")
 
         bim[value: "foo"] = 5
+        XCTAssertEqual(bim["foo"], 5)
         XCTAssertEqual(bim[5], "foo")
 
         // mutation
         bim["A"] = 4
-        XCTAssertEqual(bim[4], "A", "regression for duplicate key error")
+
+
+//        ["A": 4, "C": 3, "B": 2, "foo": 5, "D": 4] : A <-- 4 is found first
+//        ["C": 3, "D": 4, "foo": 5, "A": 4, "B": 2] : D <-- 4 is found first
+        XCTAssertTrue(bim[4] == "A" || bim[4] == "D", "4 exists as a key for values A and D - so the key is indeterministic via value lookup")
+        XCTAssertEqual(bim["A"], 4)
+        XCTAssertEqual(bim["D"], 4)
 
         bim[value: "belt"] = 1
         XCTAssertEqual(bim[1], "belt", "regression for duplicate key error")
