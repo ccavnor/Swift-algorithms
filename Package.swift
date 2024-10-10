@@ -3,7 +3,6 @@
 
 import PackageDescription
 
-
 let package = Package(
     name: "ccavnor-swift-collections",
     // Products define the executables and libraries a package produces, and make them visible to other packages.
@@ -17,6 +16,8 @@ let package = Package(
         .library(name: "Queue", targets: ["Queue"]),
         .library(name: "Stack", targets: ["Stack"]),
         .library(name: "Heap", targets: ["Heap"]),
+        .library(name: "BiMap", targets: ["BiMap"]),
+        .library(name: "BiMultiMap", targets: ["BiMultiMap"]),
         // functional code
         .library(name: "ValueBasedStack", targets: ["ValueBasedStack"]),
         .library(name: "ValueBasedBinarySearchTree",targets: ["ValueBasedBinarySearchTree"]),
@@ -38,6 +39,7 @@ let package = Package(
         //    https://github.com/apple/swift-docc/issues/255
         // But I provided a shell script called scripts/docAll.sh that will build each target
         // and extract out the required directories into a common doc directory called "allDocs".
+        // Add any new target to docAll.sh's "allTargets" list and run it.
         //
         // Run a second script (scripts/buildGithubPagesDocs.sh) against any single target in this
         // Swift Package Manager manifest and the required files will be generated for Github Pages.
@@ -75,7 +77,7 @@ let package = Package(
             name: "IteratableListProtocol",
             dependencies: [],
             path: "Sources/Protocols/IteratableListProtocol"),
-        // code
+        // trees
         .target(
             name: "BinarySearchTree",
             dependencies: ["TreeProtocol"],
@@ -104,36 +106,57 @@ let package = Package(
         .testTarget(
             name: "TimeIntervalTreeTests",
             dependencies: ["TimeIntervalTree", "DateHelper"]),
+        // Linked List
         .target(
             name: "LinkedList",
             dependencies: []),
         .testTarget(
             name: "LinkedListTests",
             dependencies: ["LinkedList"]),
-        .target(
-            name: "Trie",
-            dependencies: ["TrieProtocol"]),
-        .testTarget(
-            name: "TrieTests",
-            dependencies: ["Trie"]),
-        .target(
-            name: "Queue",
-            dependencies: ["IteratableListProtocol", "LinkedList"]),
-        .testTarget(
-            name: "QueueTests",
-            dependencies: ["Queue"]),
+        // Stack
         .target(
             name: "Stack",
             dependencies: ["IteratableListProtocol", "LinkedList"]),
         .testTarget(
             name: "StackTests",
             dependencies: ["Stack"]),
+        // Heap
         .target(
             name: "Heap",
             dependencies: ["IteratableListProtocol"]),
         .testTarget(
             name: "HeapTests",
             dependencies: ["Heap"]),
+        // Queue
+        .target(
+            name: "Queue",
+            dependencies: ["IteratableListProtocol", "LinkedList"]),
+        .testTarget(
+            name: "QueueTests",
+            dependencies: ["Queue"]),
+        // Trie
+        .target(
+            name: "Trie",
+            dependencies: ["TrieProtocol"]),
+        .testTarget(
+            name: "TrieTests",
+            dependencies: ["Trie"]),
+        // Maps
+        .target(
+            name: "BiMap",
+            dependencies: [],
+            path: "Sources/Maps/BiMap"),
+        .testTarget(
+            name: "BiMapTests",
+            dependencies: ["BiMap"]),
+        .target(
+            name: "BiMultiMap",
+            dependencies: [],
+            path: "Sources/Maps/BiMultiMap"),
+        .testTarget(
+            name: "BiMultiMapTests",
+            dependencies: ["BiMultiMap"]),
+
         // code - functional implementations
         .target(
             name: "ValueBasedStack",

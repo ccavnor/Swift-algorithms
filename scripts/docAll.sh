@@ -14,7 +14,9 @@ allTargets=('ValueBasedStack'
             'Trie'
             'Queue'
             'Stack'
-            'Heap')
+            'Heap'
+            'BiMap'
+            'BiMultiMap')
 
 pushd ../
 # make a common docs folder named 'allDocs'

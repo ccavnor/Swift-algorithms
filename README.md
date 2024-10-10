@@ -43,12 +43,27 @@ These are value based collections specifically implemented for functional applic
 - [Stack](https://ccavnor.github.io/Swift-algorithms/documentation/valuebasedstack/)
 - [Binary Search Tree](https://ccavnor.github.io/Swift-algorithms/documentation/valuebasedbinarysearchtree/)
 
-### Bags
-Bags are data structures that manipulate unsequenced data and allow for redundant values (unlike sets).
+### LinkedList
 
 - [LinkedList](https://ccavnor.github.io/Swift-algorithms/documentation/linkedlist/)
+
+### Stack
+
 - [Stack](https://ccavnor.github.io/Swift-algorithms/documentation/stack/)
+
+### Heap
+
 - [Heap](https://ccavnor.github.io/Swift-algorithms/documentation/heap/)
+
+### Queue
+
+- [Queue](https://ccavnor.github.io/Swift-algorithms/documentation/queue/)
+
+### Maps
+
+- [BiMap](https://ccavnor.github.io/Swift-algorithms/documentation/bimap/)
+- [BiMultiMap](https://ccavnor.github.io/Swift-algorithms/documentation/bimultimap/)
+
 
 ### Trie
 A k-ary search tree, a tree data structure used for locating specific keys. Tries are often used for pattern
